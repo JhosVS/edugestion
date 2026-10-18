@@ -129,6 +129,12 @@ select:focus {
     width: auto;
 }
 
+.barra label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
 .aviso {
     padding: .7rem 1rem;
     border-radius: 10px;
@@ -273,11 +279,6 @@ select:focus {
     padding: 1.2rem 1.5rem 2rem;
 }
 
-.topbar,
-.pagina {
-    max-width: 1000px;
-}
-
 .topbar {
     display: flex;
     justify-content: flex-end;
@@ -321,6 +322,7 @@ select:focus {
 
 .pagina {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
 }
 
@@ -588,4 +590,35 @@ select:focus {
     .usuario-chip {
         display: none;
     }
+}
+
+/* Rendimiento: barra apilada AD / A / B / C */
+.apilada {
+    display: flex;
+    min-width: 140px;
+    height: 12px;
+    overflow: hidden;
+    background: var(--borde);
+    border-radius: 6px;
+}
+
+.apilada i {
+    display: block;
+    height: 100%;
+}
+
+.seg--AD {
+    background: var(--celeste);
+}
+
+.seg--A {
+    background: var(--verde);
+}
+
+.seg--B {
+    background: var(--naranja);
+}
+
+.seg--C {
+    background: var(--rojo);
 }

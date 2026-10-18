@@ -3,6 +3,7 @@ from datetime import date
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 
 from ..auth import login_required
+from ..consultas import avance_notas
 from ..db import get_db
 
 bp = Blueprint("docente", __name__, url_prefix="/docente")
@@ -57,19 +58,7 @@ def _asignacion_del_docente(asignacion_id):
 @login_required("docente")
 def inicio():
     bimestre = _bimestre()
-    filas = get_db().execute(
-        "SELECT a.id, c.nombre AS curso, s.id AS seccion_id, s.grado, s.seccion, "
-        " (SELECT COUNT(*) FROM alumnos al WHERE al.seccion_id = s.id) * "
-        " (SELECT COUNT(*) FROM competencias co WHERE co.curso_id = c.id) AS esperados, "
-        " (SELECT COUNT(*) FROM calificaciones k "
-        "   JOIN alumnos al ON al.usuario_id = k.alumno_id "
-        "   JOIN competencias co ON co.id = k.competencia_id "
-        "  WHERE al.seccion_id = s.id AND co.curso_id = c.id AND k.bimestre = ?) AS registrados "
-        "FROM asignaciones a JOIN cursos c ON c.id = a.curso_id "
-        "JOIN secciones s ON s.id = a.seccion_id WHERE a.docente_id = ? "
-        "ORDER BY s.grado, s.seccion, c.nombre", (bimestre, g.usuario["id"])).fetchall()
-    cursos = [dict(f, pct=round(100 * f["registrados"] / f["esperados"]) if f["esperados"] else 0)
-              for f in filas]
+    cursos = avance_notas(get_db(), bimestre, g.usuario["id"])
     return render_template("docente/inicio.html", cursos=cursos, bimestre=bimestre,
                            n_secciones=len({c["seccion_id"] for c in cursos}))
 

@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+{% block titulo %}Asistencia · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Asistencia</h1>
+    <p class="suave">Las tardanzas cuentan como asistencia en el porcentaje.</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <label>Desde <input type="date" name="desde" value="{{ desde or '' }}"></label>
+        <label>Hasta <input type="date" name="hasta" value="{{ hasta or '' }}"></label>
+        <button class="btn btn--celeste btn--chico">Filtrar</button>
+        <a class="btn btn--chico btn--naranja" href="{{ url_for('director.asistencia') }}">Quitar filtro</a>
+    </form>
+</section>
+
+<section class="grid-stats">
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if general.pct is not none %}{{ general.pct }}%{% else %}—{% endif %}</span>
+        <span class="stat__etiqueta">Asistencia general</span>
+    </article>
+    <article class="stat"><span class="stat__valor">{{ general.p }}</span><span class="stat__etiqueta">Presentes</span>
+    </article>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ general.t }}</span><span
+            class="stat__etiqueta">Tardanzas</span></article>
+    <article class="stat stat--rojo"><span class="stat__valor">{{ general.f }}</span><span
+            class="stat__etiqueta">Faltas</span></article>
+</section>
+
+<section class="tarjeta">
+    <h2>Por sección</h2>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sección</th>
+                    <th>Alumnos</th>
+                    <th>P</th>
+                    <th>T</th>
+                    <th>F</th>
+                    <th>Asistencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in secciones %}
+                <tr>
+                    <td>{{ s.grado }} "{{ s.seccion }}"</td>
+                    <td>{{ s.alumnos }}</td>
+                    <td>{{ s.p }}</td>
+                    <td>{{ s.t }}</td>
+                    <td>{{ s.f }}</td>
+                    <td>{% if s.pct is not none %}<span class="chip chip--{{ s.nivel }}">{{ s.pct }}%</span>{% else
+                        %}<span class="suave">—</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="tarjeta">
+    <h2>Alumnos con más faltas</h2>
+    {% if mas_faltas %}
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Sección</th>
+                    <th>Faltas</th>
+                    <th>Tardanzas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in mas_faltas %}
+                <tr>
+                    <td>{{ a.nombre }}</td>
+                    <td>{{ a.grado }} "{{ a.seccion }}"</td>
+                    <td><span class="chip chip--F">{{ a.faltas }}</span></td>
+                    <td>{{ a.tardanzas }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="suave">No hay faltas registradas en este período.</p>
+    {% endif %}
+</section>
+{% endblock %}

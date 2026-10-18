@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block titulo %}Rendimiento · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Rendimiento</h1>
+    <p class="suave">Distribución de calificativos por curso y sección</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="bimestre">{% for b in [1, 2, 3, 4] %}
+            <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+    <div class="leyenda" style="margin-top: 1rem">
+        <span><span class="chip">AD</span> Destacado</span>
+        <span><span class="chip chip--A">A</span> Esperado</span>
+        <span><span class="chip chip--B">B</span> En proceso</span>
+        <span><span class="chip chip--C">C</span> En inicio</span>
+    </div>
+</section>
+
+<section class="tarjeta">
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sección</th>
+                    <th>Curso</th>
+                    <th>Distribución</th>
+                    <th>B + C</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cursos %}
+                <tr>
+                    <td>{{ c.grado }} "{{ c.seccion }}"</td>
+                    <td>{{ c.curso }}</td>
+                    <td>
+                        {% if c.total %}
+                        <div class="apilada">
+                            {% for nivel, n, pct in c.segmentos %}<i class="seg--{{ nivel }}" style="width: {{ pct }}%"
+                                title="{{ nivel }}: {{ n }}"></i>{% endfor %}
+                        </div>
+                        <small class="suave">{{ c.total }} calificativos</small>
+                        {% else %}<span class="suave">Sin notas registradas</span>{% endif %}
+                    </td>
+                    <td>{% if c.bajo is not none %}{{ c.bajo }}%{% else %}<span class="suave">—</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="tarjeta">
+    <h2>Alumnos con más calificativos C</h2>
+    {% if en_riesgo %}
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Sección</th>
+                    <th>C</th>
+                    <th>B</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in en_riesgo %}
+                <tr>
+                    <td>{{ a.nombre }}</td>
+                    <td>{{ a.grado }} "{{ a.seccion }}"</td>
+                    <td><span class="chip chip--C">{{ a.n_c }}</span></td>
+                    <td>{{ a.n_b }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="suave">Ningún alumno tiene calificativos C en este bimestre.</p>
+    {% endif %}
+</section>
+{% endblock %}

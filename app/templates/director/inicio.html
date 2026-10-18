@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block titulo %}Inicio · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Resumen institucional</h1>
+    <p class="suave">I.E. César Vallejo · Cerro de Pasco</p>
+</div>
+
+<section class="grid-stats">
+    <article class="stat"><span class="stat__valor">{{ resumen.alumnos }}</span><span
+            class="stat__etiqueta">Alumnos</span></article>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ resumen.docentes }}</span><span
+            class="stat__etiqueta">Docentes</span></article>
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if resumen.asistencia is not none %}{{ resumen.asistencia }}%{% else %}—{% endif
+            %}</span>
+        <span class="stat__etiqueta">Asistencia general</span>
+    </article>
+    <article class="stat stat--rojo"><span class="stat__valor">{{ resumen.avance }}%</span><span
+            class="stat__etiqueta">Notas registradas (B{{ bimestre }})</span></article>
+</section>
+
+<section class="tarjeta">
+    <h2>Avance del registro de notas</h2>
+    <p class="suave">Qué porcentaje de calificativos ya registró cada docente.</p>
+    <form method="get" class="barra">
+        <select name="bimestre">{% for b in [1, 2, 3, 4] %}
+            <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sección</th>
+                    <th>Curso</th>
+                    <th>Docente</th>
+                    <th>Avance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in avance %}
+                <tr>
+                    <td>{{ f.grado }} "{{ f.seccion }}"</td>
+                    <td>{{ f.curso }}</td>
+                    <td>{{ f.docente }}</td>
+                    <td>
+                        <div class="progreso"><i style="width: {{ f.pct }}%"></i></div>
+                        <small class="suave">{{ f.registrados }}/{{ f.esperados }} ({{ f.pct }}%)</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

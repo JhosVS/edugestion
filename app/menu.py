@@ -13,8 +13,11 @@ MENUS = {
         ("docente.asistencia", "Asistencia", "asistencia"),
         ("docente.notas", "Notas", "libreta"),
     ],
-    # Se completa en el paso 4
-    "director": [("director.inicio", "Inicio", "inicio")],
+    "director": [
+        ("director.inicio", "Inicio", "inicio"),
+        ("director.asistencia", "Asistencia", "asistencia"),
+        ("director.rendimiento", "Rendimiento", "rendimiento"),
+    ],
 }
 
 
