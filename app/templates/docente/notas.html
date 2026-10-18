@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block titulo %}Notas · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>{{ asig.curso }} · {{ asig.grado }} "{{ asig.seccion }}"</h1>
+    <p class="suave">AD = Destacado · A = Esperado · B = En proceso · C = En inicio</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="bimestre">{% for b in [1, 2, 3, 4] %}
+            <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+</section>
+
+<form method="post" class="tarjeta">
+    <input type="hidden" name="bimestre" value="{{ bimestre }}">
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Alumno</th>{% for c in competencias %}<th>{{ c.nombre }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in alumnos %}
+                <tr>
+                    <td>{{ a.nombre }}</td>
+                    {% for c in competencias %}
+                    <td>
+                        <select name="n_{{ a.id }}_{{ c.id }}">
+                            <option value="">—</option>
+                            {% for k in calificativos %}
+                            <option value="{{ k }}" {% if previos.get((a.id, c.id))==k %}selected{% endif %}>{{ k }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="acciones"><button class="btn btn--verde">Guardar notas</button></div>
+</form>
+{% endblock %}

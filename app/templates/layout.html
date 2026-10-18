@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_iconos.html" import icono %}
+
+{% block contenido %}
+<aside class="sidebar">
+    <a class="sidebar__marca" href="{{ url_for('auth.raiz') }}">
+        <img src="{{ url_for('static', filename='img/icon.svg') }}" alt="">
+        <span>Edu<span>Gestión</span></span>
+    </a>
+    <nav class="nav" aria-label="Menú principal">
+        {% for endpoint, texto, ico in menu %}
+        <a class="nav__item {% if request.endpoint.startswith(endpoint) %}activo{% endif %}"
+            href="{{ url_for(endpoint) }}">{{
+            icono(ico) }}<span>{{ texto }}</span></a>
+        {% endfor %}
+    </nav>
+</aside>
+
+<div class="contenido">
+    <header class="topbar">
+        <div class="topbar__marca">
+            <img src="{{ url_for('static', filename='img/icon.svg') }}" alt="">
+            <strong>Edu<span>Gestión</span></strong>
+        </div>
+        <div class="topbar__usuario">
+            <div class="usuario-chip">
+                <strong>{{ g.usuario.nombres }} {{ g.usuario.apellidos }}</strong>
+                <small>{{ g.usuario.rol|capitalize }}</small>
+            </div>
+            <a class="btn btn--rojo btn--chico btn--salir" href="{{ url_for('auth.logout') }}">
+                {{ icono("salir") }}<span>Salir</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="pagina">
+        {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+        <div class="aviso aviso--{{ categoria }}">{{ mensaje }}</div>
+        {% endfor %}
+        {% block pagina %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

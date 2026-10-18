@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block titulo %}Asistencia · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Asistencia</h1>
+    <p class="suave">Elige la sección para tomar asistencia</p>
+</div>
+{% for s in secciones %}
+<section class="tarjeta fila">
+    <div>
+        <h2>{{ s.grado }} "{{ s.seccion }}"</h2>
+        <span class="suave">{{ s.total }} alumnos ·</span>
+        {% if s.hoy %}<span class="chip chip--P">Hoy registrada</span>{% else %}<span class="insignia">Hoy
+            pendiente</span>{% endif %}
+    </div>
+    <a class="btn btn--verde" href="{{ url_for('docente.asistencia_seccion', seccion_id=s.id) }}">Tomar asistencia</a>
+</section>
+{% else %}
+<section class="tarjeta">
+    <p class="suave">Aún no tienes secciones asignadas.</p>
+</section>
+{% endfor %}
+{% endblock %}

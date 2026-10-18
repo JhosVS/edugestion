@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% from "_iconos.html" import icono %}
+{% block titulo %}{{ titulo }} · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>{{ titulo }}</h1>
+</div>
+<section class="tarjeta proximamente">
+    <div class="proximamente__icono">{{ icono(icono_nombre) }}</div>
+    <span class="insignia">Próximamente</span>
+    <p class="suave">{{ texto }}</p>
+</section>
+{% endblock %}

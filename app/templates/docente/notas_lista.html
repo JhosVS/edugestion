@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block titulo %}Notas · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Notas</h1>
+    <p class="suave">Elige el curso y la sección</p>
+</div>
+<section class="tarjeta">
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Sección</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in asignaciones %}
+                <tr>
+                    <td>{{ a.curso }}</td>
+                    <td>{{ a.grado }} "{{ a.seccion }}"</td>
+                    <td><a class="btn btn--naranja btn--chico"
+                            href="{{ url_for('docente.notas_asignacion', asignacion_id=a.id) }}">Registrar notas</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="suave">Aún no tienes cursos asignados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

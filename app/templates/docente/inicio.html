@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block titulo %}Inicio · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>¡Hola, {{ g.usuario.nombres }}!</h1>
+    <p class="suave">Resumen de tus cursos asignados</p>
+</div>
+
+<section class="grid-stats">
+    <article class="stat stat--naranja"><span class="stat__valor">{{ cursos|length }}</span><span
+            class="stat__etiqueta">Cursos asignados</span></article>
+    <article class="stat stat--verde"><span class="stat__valor">{{ n_secciones }}</span><span
+            class="stat__etiqueta">Secciones</span></article>
+</section>
+
+<section class="tarjeta">
+    <h2>Avance de notas</h2>
+    <form method="get" class="barra">
+        <select name="bimestre">{% for b in [1, 2, 3, 4] %}
+            <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Sección</th>
+                    <th>Avance</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cursos %}
+                <tr>
+                    <td>{{ c.curso }}</td>
+                    <td>{{ c.grado }} "{{ c.seccion }}"</td>
+                    <td>
+                        <div class="progreso"><i style="width: {{ c.pct }}%"></i></div>
+                        <small class="suave">{{ c.registrados }}/{{ c.esperados }} ({{ c.pct }}%)</small>
+                    </td>
+                    <td><a class="btn btn--naranja btn--chico"
+                            href="{{ url_for('docente.notas_asignacion', asignacion_id=c.id, bimestre=bimestre) }}">Registrar</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="suave">Aún no tienes cursos asignados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

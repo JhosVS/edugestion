@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block titulo %}Libreta · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Mi libreta</h1>
+    <p class="suave">{{ perfil.grado }} "{{ perfil.seccion }}" · Calificativos por competencia y bimestre</p>
+</div>
+
+<section class="tarjeta leyenda">
+    <span><span class="chip chip--AD">AD</span> Logro destacado</span>
+    <span><span class="chip chip--A">A</span> Logro esperado</span>
+    <span><span class="chip chip--B">B</span> En proceso</span>
+    <span><span class="chip chip--C">C</span> En inicio</span>
+</section>
+
+{% for curso in cursos %}
+<section class="tarjeta">
+    <h2>{{ curso.nombre }}</h2>
+    <p class="suave">Docente: {{ curso.docente }}</p>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Competencia</th>
+                    <th>B1</th>
+                    <th>B2</th>
+                    <th>B3</th>
+                    <th>B4</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comp in curso.competencias %}
+                <tr>
+                    <td>{{ comp.nombre }}</td>
+                    {% for b in [1, 2, 3, 4] %}
+                    <td>{% set nota = comp.notas.get(b) %}
+                        {% if nota %}<span class="chip chip--{{ nota }}">{{ nota }}</span>{% else %}<span
+                            class="suave">—</span>{% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% else %}
+<section class="tarjeta">
+    <p class="suave">Aún no tienes cursos asignados.</p>
+</section>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block titulo %}{{ titulo }} · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>{{ titulo }}</h1>
+    <p class="suave">Sesión iniciada como <strong>{{ g.usuario.rol }}</strong>.</p>
+</div>
+<section class="tarjeta">
+    <p class="suave">Las pantallas de este rol se construyen en los siguientes pasos.</p>
+</section>
+{% endblock %}

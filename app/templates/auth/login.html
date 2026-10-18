@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titulo %}Iniciar sesión · EduGestión{% endblock %}
+
+{% block contenido %}
+<main class="login">
+  <section class="tarjeta login__caja">
+    <h1 class="marca"><img src="{{ url_for('static', filename='img/icon.svg') }}" alt="">Edu<span>Gestión</span></h1>
+    <p class="suave">I.E. César Vallejo · Cerro de Pasco</p>
+
+    {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+    <div class="aviso aviso--{{ categoria }}">{{ mensaje }}</div>
+    {% endfor %}
+
+    <form method="post" class="formulario" autocomplete="on">
+      <label for="correo">Correo</label>
+      <input id="correo" name="correo" type="email" required autofocus placeholder="usuario@correo.com">
+
+      <label for="clave">Contraseña</label>
+      <input id="clave" name="clave" type="password" required placeholder="••••••••">
+
+      <button class="btn btn--naranja btn--ancho" type="submit">Ingresar</button>
+    </form>
+  </section>
+
+  {% if credenciales %}
+  <section class="tarjeta login__demo">
+    <h2>Credenciales de prueba</h2>
+    <p class="suave">Solo para el prototipo académico. Pulsa "Usar" para rellenar el formulario.</p>
+    <ul class="demo-lista">
+      {% for rol, correo, clave in credenciales %}
+      <li>
+        <div>
+          <strong>{{ rol }}</strong><br>
+          <small class="suave">{{ correo }} · {{ clave }}</small>
+        </div>
+        <button type="button" class="btn btn--celeste btn--chico usar-cred" data-correo="{{ correo }}"
+          data-clave="{{ clave }}">Usar</button>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</main>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}

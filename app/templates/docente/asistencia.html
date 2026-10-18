@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block titulo %}Asistencia · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Asistencia · {{ seccion.grado }} "{{ seccion.seccion }}"</h1>
+    <p class="suave">P = Presente · T = Tardanza · F = Falta</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <input type="date" name="fecha" value="{{ fecha }}" max="{{ hoy }}">
+        <button class="btn btn--celeste btn--chico">Cambiar fecha</button>
+    </form>
+</section>
+
+<form method="post" class="tarjeta">
+    <input type="hidden" name="fecha" value="{{ fecha }}">
+    {% for a in alumnos %}
+    <div class="fila">
+        <span>{{ a.nombre }}</span>
+        <div>
+            {% for k, nombre in estados.items() %}
+            <label class="opc opc--{{ k }}">
+                <input type="radio" name="est_{{ a.id }}" value="{{ k }}" {% if previos.get(a.id, 'P' )==k %}checked{%
+                    endif %}>
+                <span title="{{ nombre }}">{{ k }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    <div class="acciones">
+        <button type="button" id="todos-p" class="btn btn--celeste">Todos presentes</button>
+        <button class="btn btn--verde">Guardar asistencia</button>
+    </div>
+</form>
+<script src="{{ url_for('static', filename='js/asistencia.js') }}"></script>
+{% endblock %}

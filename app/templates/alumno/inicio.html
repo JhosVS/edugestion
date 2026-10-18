@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block titulo %}Inicio · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>¡Hola, {{ g.usuario.nombres }}!</h1>
+    <p class="suave">{{ perfil.grado }} "{{ perfil.seccion }}" · Año {{ perfil.anio }}</p>
+</div>
+
+<section class="grid-stats">
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if asistencia.pct is not none %}{{ asistencia.pct }}%{% else %}—{% endif %}</span>
+        <span class="stat__etiqueta">Asistencia</span>
+    </article>
+    <article class="stat stat--naranja">
+        <span class="stat__valor">{{ asistencia.T }}</span>
+        <span class="stat__etiqueta">Tardanzas</span>
+    </article>
+    <article class="stat stat--rojo">
+        <span class="stat__valor">{{ asistencia.F }}</span>
+        <span class="stat__etiqueta">Faltas</span>
+    </article>
+</section>
+
+<section class="tarjeta">
+    <h2>Mis calificativos</h2>
+    <p class="suave">Cantidad de competencias por nivel de logro.</p>
+    <div class="niveles">
+        <div><span class="chip chip--AD">AD</span> <strong>{{ conteo.AD }}</strong> <small
+                class="suave">Destacado</small></div>
+        <div><span class="chip chip--A">A</span> <strong>{{ conteo.A }}</strong> <small class="suave">Esperado</small>
+        </div>
+        <div><span class="chip chip--B">B</span> <strong>{{ conteo.B }}</strong> <small class="suave">En proceso</small>
+        </div>
+        <div><span class="chip chip--C">C</span> <strong>{{ conteo.C }}</strong> <small class="suave">En inicio</small>
+        </div>
+    </div>
+    <p><a class="btn btn--naranja" href="{{ url_for('alumno.libreta') }}">Ver mi libreta</a>
+        <a class="btn btn--verde" href="{{ url_for('alumno.asistencia') }}">Ver mi asistencia</a>
+    </p>
+</section>
+
+<section class="tarjeta">
+    <h2>Agenda <span class="insignia">Próximamente</span></h2>
+    <p class="suave">Aquí aparecerán tareas y avisos de tu sección.</p>
+</section>
+{% endblock %}

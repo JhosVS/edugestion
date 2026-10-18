@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block titulo %}Asistencia · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Mi asistencia</h1>
+    <p class="suave">Resumen general y últimos registros</p>
+</div>
+
+<section class="grid-stats">
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if resumen.pct is not none %}{{ resumen.pct }}%{% else %}—{% endif %}</span>
+        <span class="stat__etiqueta">Asistencia</span>
+    </article>
+    <article class="stat stat--celeste"><span class="stat__valor">{{ resumen.P }}</span><span
+            class="stat__etiqueta">Presentes</span></article>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ resumen.T }}</span><span
+            class="stat__etiqueta">Tardanzas</span></article>
+    <article class="stat stat--rojo"><span class="stat__valor">{{ resumen.F }}</span><span
+            class="stat__etiqueta">Faltas</span></article>
+</section>
+
+<section class="tarjeta">
+    <h2>Últimos registros</h2>
+    {% if registros %}
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td>{{ r.fecha|fecha_corta }}</td>
+                    <td><span class="chip chip--{{ r.estado }}">{{ {'P': 'Presente', 'T': 'Tardanza', 'F':
+                            'Falta'}[r.estado] }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="suave">Todavía no hay asistencias registradas.</p>
+    {% endif %}
+    <p class="suave"><small>Las tardanzas cuentan como asistencia en el porcentaje.</small></p>
+</section>
+{% endblock %}
