@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block titulo %}SIAGIE · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Exportar a SIAGIE</h1>
+    <p class="suave">Excel con los calificativos de cada sección, una hoja por curso, para cargarlo en el SIAGIE.</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="bimestre">{% for b in [1, 2, 3, 4] %}
+            <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sección</th>
+                    <th>Cursos</th>
+                    <th>Calificativos registrados</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in secciones %}
+                <tr>
+                    <td>{{ s.grado }} "{{ s.seccion }}"</td>
+                    <td>{{ s.cursos }}</td>
+                    <td>
+                        <div class="progreso"><i style="width: {{ s.pct }}%"></i></div>
+                        <small class="suave">{{ s.registrados }}/{{ s.esperados }} ({{ s.pct }}%){% if s.pct < 100 %}
+                            · incompleto{% endif %}</small>
+                    </td>
+                    <td><a class="btn btn--naranja btn--chico"
+                            href="{{ url_for('director.siagie_seccion', seccion_id=s.id, bimestre=bimestre) }}">Descargar
+                            Excel</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="suave">No hay secciones con cursos asignados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="tarjeta">
+    <h2>Antes de cargar en el SIAGIE</h2>
+    <ul>
+        <li>Las celdas resaltadas en amarillo son calificativos que aún no se registran.</li>
+        <li>Revisa que cada alumno tenga su DNI o código (se edita en Gestión → Usuarios).</li>
+        <li>El formato es provisional: se ajustará a la plantilla oficial que use la institución.</li>
+    </ul>
+</section>
+{% endblock %}

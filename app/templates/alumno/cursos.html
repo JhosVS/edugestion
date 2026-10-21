@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% from "_horario.html" import horario_semanal %}
+{% block titulo %}Cursos · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Mis cursos</h1>
+    <p class="suave">{{ perfil.grado }} "{{ perfil.seccion }}" · Año {{ perfil.anio }}</p>
+</div>
+
+<section class="tarjeta">
+    <h2>Horario semanal</h2>
+    {{ horario_semanal(bloques, dias) }}
+</section>
+
+<section class="tarjeta">
+    <h2>Cursos y competencias</h2>
+    <ul class="lista">
+        {% for c in cursos %}
+        <li>
+            <div>
+                <strong>{{ c.curso }}</strong>
+                <p class="suave">Docente: {{ c.docente }}</p>
+                {% if c.competencias %}
+                <p><small>{{ c.competencias.split('|')|join(' · ') }}</small></p>
+                {% endif %}
+            </div>
+        </li>
+        {% else %}
+        <li class="suave">Aún no tienes cursos asignados.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

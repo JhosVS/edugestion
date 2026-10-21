@@ -1,5 +1,6 @@
 # Entorno virtual
 venv/
+.venv/
 env/
 
 # Base de datos local SQLite
@@ -20,5 +21,16 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Prevención para variables de entorno futuras
+# Variables de entorno (contienen la SECRET_KEY real; la plantilla es .env.example)
 .env
+env
+env.example
+
+# Herramientas de IA (configuración local de Claude Code)
+.claude/
+CLAUDE.md
+
+# Documentos del curso
+Informe_Primer_Avance_EduGestion.docx
+*.docx
+~$*

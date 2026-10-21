@@ -1,10 +1,11 @@
 from datetime import date
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, abort, render_template, request, send_file
 
 from ..auth import login_required
 from ..consultas import avance_notas
 from ..db import get_db
+from ..siagie import generar_excel
 
 bp = Blueprint("director", __name__, url_prefix="/director")
 
@@ -126,3 +127,31 @@ def rendimiento():
 
     return render_template("director/rendimiento.html", cursos=cursos, en_riesgo=en_riesgo,
                            bimestre=bimestre)
+
+@bp.route("/siagie")
+@login_required("director")
+def siagie():
+    db = get_db()
+    bimestre = _bimestre()
+    secciones = {}
+    for f in avance_notas(db, bimestre):  # suma el avance de todos los cursos de cada sección
+        s = secciones.setdefault(f["seccion_id"], {"id": f["seccion_id"], "grado": f["grado"],
+                                                   "seccion": f["seccion"], "cursos": 0,
+                                                   "esperados": 0, "registrados": 0})
+        s["cursos"] += 1
+        s["esperados"] += f["esperados"]
+        s["registrados"] += f["registrados"]
+    for s in secciones.values():
+        s["pct"] = round(100 * s["registrados"] / s["esperados"]) if s["esperados"] else 0
+    return render_template("director/siagie.html", secciones=list(secciones.values()),
+                           bimestre=bimestre)
+
+
+@bp.route("/siagie/<int:seccion_id>")
+@login_required("director")
+def siagie_seccion(seccion_id):
+    db = get_db()
+    if db.execute("SELECT 1 FROM secciones WHERE id = ?", (seccion_id,)).fetchone() is None:
+        abort(404)
+    archivo, nombre, _ = generar_excel(db, seccion_id, _bimestre())
+    return send_file(archivo, as_attachment=True, download_name=nombre)

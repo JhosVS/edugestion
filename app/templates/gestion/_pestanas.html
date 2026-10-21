@@ -1,0 +1,8 @@
+<nav class="pestanas" aria-label="Gestión">
+    {% for endpoint, texto in [("gestion.usuarios", "Usuarios"), ("gestion.secciones", "Secciones"),
+    ("gestion.cursos", "Cursos y competencias"), ("gestion.asignaciones", "Asignaciones"),
+    ("gestion.horarios", "Horarios")] %}
+    <a class="{% if request.endpoint.startswith(endpoint) %}activo{% endif %}" href="{{ url_for(endpoint) }}">{{
+        texto }}</a>
+    {% endfor %}
+</nav>

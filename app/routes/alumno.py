@@ -1,6 +1,9 @@
+from datetime import date
+
 from flask import Blueprint, g, render_template
 
 from ..auth import login_required
+from ..consultas import DIAS_SEMANA, horario
 from ..db import get_db
 
 bp = Blueprint("alumno", __name__, url_prefix="/alumno")
@@ -42,8 +45,17 @@ def inicio():
 @bp.route("/cursos")
 @login_required("alumno")
 def cursos():
-    return render_template("proximamente.html", titulo="Cursos", icono_nombre="cursos",
-                           texto="Aquí verás tus cursos con sus horarios.")
+    db = get_db()
+    perfil = _perfil()
+    lista = db.execute(
+        "SELECT c.nombre AS curso, u.nombres || ' ' || u.apellidos AS docente, "
+        " (SELECT GROUP_CONCAT(co.nombre, '|') FROM competencias co "
+        "   WHERE co.curso_id = c.id) AS competencias "
+        "FROM asignaciones a JOIN cursos c ON c.id = a.curso_id "
+        "JOIN usuarios u ON u.id = a.docente_id WHERE a.seccion_id = ? ORDER BY c.nombre",
+        (perfil["seccion_id"],)).fetchall()
+    return render_template("alumno/cursos.html", perfil=perfil, cursos=lista,
+                           bloques=horario(db, seccion_id=perfil["seccion_id"]), dias=DIAS_SEMANA)
 
 
 @bp.route("/libreta")
@@ -84,3 +96,13 @@ def asistencia():
         "ORDER BY fecha DESC LIMIT 30", (g.usuario["id"],)).fetchall()
     return render_template("alumno/asistencia.html",
                            resumen=_resumen_asistencia(g.usuario["id"]), registros=registros)
+
+@bp.route("/agenda")
+@login_required("alumno")
+def agenda():
+    entradas = get_db().execute(
+        "SELECT ag.titulo, ag.descripcion, ag.fecha, u.nombres || ' ' || u.apellidos AS docente "
+        "FROM agenda ag LEFT JOIN usuarios u ON u.id = ag.creado_por "
+        "WHERE ag.seccion_id = ? AND ag.fecha >= ? ORDER BY ag.fecha",
+        (_perfil()["seccion_id"], date.today().isoformat())).fetchall()
+    return render_template("alumno/agenda.html", entradas=entradas, hoy=date.today().isoformat())

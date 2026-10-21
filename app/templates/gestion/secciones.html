@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block titulo %}Secciones · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Secciones</h1>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+<form method="post" class="tarjeta formulario">
+    <h2>Nueva sección</h2>
+    <div class="form-grid">
+        <div>
+            <label for="anio">Año</label>
+            <input id="anio" name="anio" type="number" min="2000" max="2100" value="{{ anio }}" required>
+        </div>
+        <div>
+            <label for="grado">Grado</label>
+            <input id="grado" name="grado" list="grados" maxlength="20" required placeholder="Ej.: 1°">
+            <datalist id="grados">{% for n in range(1, 7) %}<option value="{{ n }}°">{% endfor %}</datalist>
+        </div>
+        <div>
+            <label for="seccion">Sección</label>
+            <input id="seccion" name="seccion" maxlength="5" required placeholder="Ej.: A">
+        </div>
+    </div>
+    <button class="btn btn--verde">Crear sección</button>
+</form>
+
+<section class="tarjeta">
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Año</th>
+                    <th>Sección</th>
+                    <th>Alumnos activos</th>
+                    <th>Cursos asignados</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in secciones %}
+                <tr>
+                    <td>{{ s.anio }}</td>
+                    <td>{{ s.grado }} "{{ s.seccion }}"</td>
+                    <td>{{ s.alumnos }}</td>
+                    <td>{{ s.cursos }}</td>
+                    <td>
+                        <a class="btn btn--celeste btn--chico"
+                            href="{{ url_for('gestion.asignaciones', seccion=s.id) }}">Asignar cursos</a>
+                        <form method="post" class="en-linea"
+                            action="{{ url_for('gestion.seccion_eliminar', seccion_id=s.id) }}"
+                            onsubmit="return confirm('¿Eliminar esta sección?')">
+                            <button class="btn btn--rojo btn--chico">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="suave">Aún no hay secciones.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="suave"><small>Solo se puede eliminar una sección sin alumnos ni cursos asignados.</small></p>
+</section>
+{% endblock %}

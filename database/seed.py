@@ -52,23 +52,35 @@ def cargar_datos(db):
             competencias.append(db.execute(
                 "INSERT INTO competencias(curso_id, nombre) VALUES (?,?)", (cid, c)).lastrowid)
 
-    # --- Asignaciones docente-curso-sección ---
-    for sec in secciones:
-        for nombre in ("Matemática", "Comunicación"):
-            db.execute("INSERT INTO asignaciones(docente_id, curso_id, seccion_id) VALUES (?,?,?)",
-                       (doc1, cursos[nombre], sec))
-        for nombre in ("Ciencia y Tecnología", "Personal Social"):
-            db.execute("INSERT INTO asignaciones(docente_id, curso_id, seccion_id) VALUES (?,?,?)",
-                       (doc2, cursos[nombre], sec))
+    # --- Asignaciones docente-curso-sección y horario (2 bloques por semana, sin cruces) ---
+    bloques = [("08:00", "09:30"), ("09:45", "11:15"), ("11:30", "13:00"), ("14:00", "15:30")]
+    docente_de = {"Matemática": doc1, "Comunicación": doc1,
+                  "Ciencia y Tecnología": doc2, "Personal Social": doc2}
+    for si, sec in enumerate(secciones):
+        for ci, (nombre, docente) in enumerate(docente_de.items()):
+            asig = db.execute("INSERT INTO asignaciones(docente_id, curso_id, seccion_id) "
+                              "VALUES (?,?,?)", (docente, cursos[nombre], sec)).lastrowid
+            inicio, fin = bloques[(ci + 2 * si) % 4]
+            for dia in ((1, 3) if ci < 2 else (2, 4)):
+                db.execute("INSERT INTO horarios(asignacion_id, dia_semana, hora_inicio, hora_fin) "
+                           "VALUES (?,?,?,?)", (asig, dia, inicio, fin))
 
     # --- Alumnos (6 por sección). El primero es alumno@edugestion.test ---
     alumnos = []
     for i, (nom, ape) in enumerate(NOMBRES_ALUMNOS):
         correo = "alumno@edugestion.test" if i == 0 else f"alumno{i + 1}@edugestion.test"
         uid = usuario(nom, ape, correo, "alumno123", "alumno")
-        db.execute("INSERT INTO alumnos(usuario_id, seccion_id) VALUES (?,?)",
-                   (uid, secciones[i // 6]))
+        db.execute("INSERT INTO alumnos(usuario_id, seccion_id, dni) VALUES (?,?,?)",
+                   (uid, secciones[i // 6], f"{70000001 + i}"))  # DNI ficticio
         alumnos.append(uid)
+
+    # --- Agenda: algunos pendientes próximos ---
+    for sec in secciones:
+        for dias, titulo, desc in [(2, "Práctica de Matemática", "Problemas de cantidad, páginas 20 a 24."),
+                                   (6, "Exposición de Comunicación", "Tema libre, 5 minutos por grupo.")]:
+            db.execute("INSERT INTO agenda(seccion_id, titulo, descripcion, fecha, creado_por) "
+                       "VALUES (?,?,?,?,?)",
+                       (sec, titulo, desc, (date.today() + timedelta(days=dias)).isoformat(), doc1))
 
     # --- Asistencias de los últimos 5 días hábiles ---
     dia, cargados = date.today(), 0

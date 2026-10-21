@@ -23,13 +23,22 @@ def close_db(_error=None):
         db.close()
 
 
+def _migrar(db):
+    """Cambios de esquema para bases creadas con una versión anterior."""
+    columnas = {c["name"] for c in db.execute("PRAGMA table_info(alumnos)")}
+    if "dni" not in columnas:
+        db.execute("ALTER TABLE alumnos ADD COLUMN dni TEXT")
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_alumnos_dni ON alumnos(dni)")
+
+
 def init_db():
     """Crea las tablas y, si no hay usuarios, carga los datos de prueba."""
     db = get_db()
     db.executescript(SCHEMA.read_text(encoding="utf-8"))
+    _migrar(db)
     if db.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0] == 0:
         cargar_datos(db)
-        db.commit()
+    db.commit()
 
 
 def init_app(app):

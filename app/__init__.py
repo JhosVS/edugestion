@@ -11,9 +11,10 @@ def create_app():
     app.jinja_env.filters["fecha_corta"] = utils.fecha_corta
     app.register_blueprint(auth.bp)
 
-    from .routes import alumno, director, docente
+    from .routes import alumno, director, docente, gestion
     app.register_blueprint(alumno.bp)
     app.register_blueprint(docente.bp)
     app.register_blueprint(director.bp)
+    app.register_blueprint(gestion.bp)
 
     return app

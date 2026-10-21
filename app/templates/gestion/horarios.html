@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% from "_horario.html" import horario_semanal %}
+{% block titulo %}Horarios · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Horarios</h1>
+    <p class="suave">No se permiten cruces en la misma sección ni para el mismo docente</p>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+{% if seccion %}
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="seccion">
+            {% for s in secciones %}
+            <option value="{{ s.id }}" {% if s.id==seccion.id %}selected{% endif %}>{{ s.anio }} · {{ s.grado }} "{{
+                s.seccion }}"</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+</section>
+
+<form method="post" class="tarjeta formulario">
+    <h2>Agregar bloque</h2>
+    <input type="hidden" name="seccion" value="{{ seccion.id }}">
+    {% if asignaciones %}
+    <div class="form-grid">
+        <div class="completo">
+            <label for="asignacion_id">Curso</label>
+            <select id="asignacion_id" name="asignacion_id" required>
+                {% for a in asignaciones %}<option value="{{ a.id }}">{{ a.curso }} · {{ a.docente }}</option>{% endfor
+                %}
+            </select>
+        </div>
+        <div>
+            <label for="dia">Día</label>
+            <select id="dia" name="dia">{% for n, nombre in dias.items() %}<option value="{{ n }}">{{ nombre }}
+                </option>{% endfor %}</select>
+        </div>
+        <div>
+            <label for="inicio">Inicio</label>
+            <input id="inicio" name="inicio" type="time" required>
+        </div>
+        <div>
+            <label for="fin">Fin</label>
+            <input id="fin" name="fin" type="time" required>
+        </div>
+    </div>
+    <button class="btn btn--verde">Agregar al horario</button>
+    {% else %}
+    <p class="suave">Esta sección no tiene cursos asignados. <a
+            href="{{ url_for('gestion.asignaciones', seccion=seccion.id) }}">Asignar cursos</a>.</p>
+    {% endif %}
+</form>
+
+<section class="tarjeta">
+    <h2>{{ seccion.grado }} "{{ seccion.seccion }}"</h2>
+    {{ horario_semanal(bloques, dias, eliminar=true) }}
+</section>
+{% else %}
+<section class="tarjeta">
+    <p class="suave">Primero crea una <a href="{{ url_for('gestion.secciones') }}">sección</a>.</p>
+</section>
+{% endif %}
+{% endblock %}

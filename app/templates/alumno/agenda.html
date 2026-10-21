@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block titulo %}Agenda · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Agenda</h1>
+    <p class="suave">Tareas y avisos de tus docentes desde hoy</p>
+</div>
+
+<section class="tarjeta">
+    <ul class="lista">
+        {% for e in entradas %}
+        <li>
+            <div>
+                <strong>{{ e.titulo }}</strong>
+                {% if e.descripcion %}<p>{{ e.descripcion }}</p>{% endif %}
+                {% if e.docente %}<p class="suave"><small>{{ e.docente }}</small></p>{% endif %}
+            </div>
+            <span class="fecha">{% if e.fecha == hoy %}Hoy{% else %}{{ e.fecha|fecha_corta }}{% endif %}</span>
+        </li>
+        {% else %}
+        <li class="suave">No tienes pendientes en la agenda.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

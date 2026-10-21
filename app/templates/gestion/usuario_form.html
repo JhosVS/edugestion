@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block titulo %}{% if nuevo %}Nuevo usuario{% else %}Editar usuario{% endif %} · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>{% if nuevo %}Nuevo usuario{% else %}{{ u.nombres }} {{ u.apellidos }}{% endif %}</h1>
+    {% if not nuevo %}<p class="suave">{{ roles[u.rol] }}</p>{% endif %}
+</div>
+{% include "gestion/_pestanas.html" %}
+
+<form method="post" class="tarjeta formulario">
+    <div class="form-grid">
+        {% if nuevo %}
+        <div class="completo">
+            <label for="rol">Rol</label>
+            <select id="rol" name="rol">
+                {% for clave, nombre in roles.items() %}
+                <option value="{{ clave }}" {% if clave==u.rol %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div>
+            <label for="nombres">Nombres</label>
+            <input id="nombres" name="nombres" value="{{ u.nombres or '' }}" maxlength="80" required>
+        </div>
+        <div>
+            <label for="apellidos">Apellidos</label>
+            <input id="apellidos" name="apellidos" value="{{ u.apellidos or '' }}" maxlength="80" required>
+        </div>
+        <div>
+            <label for="correo">Correo</label>
+            <input id="correo" name="correo" type="email" value="{{ u.correo or '' }}" required>
+        </div>
+        <div>
+            <label for="clave">{% if nuevo %}Contraseña inicial{% else %}Nueva contraseña (opcional){% endif %}</label>
+            <input id="clave" name="clave" type="password" minlength="6" autocomplete="new-password" {% if nuevo
+                %}required{% endif %} placeholder="Mínimo 6 caracteres">
+        </div>
+
+        <div id="solo-alumno" class="completo form-grid" {% if u.rol !="alumno" %}hidden{% endif %}>
+            <div>
+                <label for="seccion_id">Sección</label>
+                <select id="seccion_id" name="seccion_id">
+                    {% for s in secciones %}
+                    <option value="{{ s.id }}" {% if s.id==u.seccion_id %}selected{% endif %}>{{ s.anio }} · {{
+                        s.grado }} "{{ s.seccion }}"</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="dni">DNI o código del estudiante</label>
+                <input id="dni" name="dni" value="{{ u.dni or '' }}" inputmode="numeric" pattern="\d{8,14}"
+                    placeholder="Para la exportación al SIAGIE">
+            </div>
+        </div>
+
+        {% if not nuevo %}
+        <div class="completo">
+            <label class="check"><input type="checkbox" name="activo" value="1" {% if u.activo %}checked{% endif %}>
+                Cuenta activa</label>
+            <small class="suave">Una cuenta inactiva no puede ingresar; un alumno inactivo deja de aparecer en
+                asistencia, notas y SIAGIE. Su historial se conserva.</small>
+        </div>
+        {% endif %}
+    </div>
+    <div class="acciones">
+        <button class="btn btn--verde">Guardar</button>
+        <a class="btn btn--borde" href="{{ url_for('gestion.usuarios', rol=u.rol) }}">Cancelar</a>
+    </div>
+</form>
+<script src="{{ url_for('static', filename='js/usuario.js') }}"></script>
+{% endblock %}

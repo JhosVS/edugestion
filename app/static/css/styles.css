@@ -622,3 +622,139 @@ select:focus {
 .seg--C {
     background: var(--rojo);
 }
+/* Formularios de gestión */
+textarea {
+    width: 100%;
+    padding: .75rem;
+    font: inherit;
+    color: var(--texto);
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    resize: vertical;
+}
+
+input[type="checkbox"] {
+    width: auto;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0 1rem;
+}
+
+.form-grid .completo {
+    grid-column: 1 / -1;
+}
+
+.check {
+    display: flex !important;
+    align-items: center;
+    gap: .5rem;
+}
+
+.en-linea {
+    display: inline;
+}
+
+.btn--mini {
+    padding: .2rem .55rem;
+    font-size: .78rem;
+    border-radius: 7px;
+}
+
+.btn--borde {
+    background: transparent;
+    color: var(--texto);
+    border: 1px solid var(--borde);
+}
+
+/* Pestañas de gestión */
+.pestanas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.pestanas a {
+    padding: .5rem .9rem;
+    border: 1px solid var(--borde);
+    border-radius: 999px;
+    color: var(--suave);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pestanas a:hover {
+    color: var(--texto);
+}
+
+.pestanas a.activo {
+    background: rgba(255, 138, 43, .15);
+    border-color: var(--naranja);
+    color: var(--naranja);
+}
+
+a.stat {
+    color: inherit;
+    text-decoration: none;
+}
+
+a.stat:hover {
+    border-color: var(--naranja);
+}
+
+/* Horario semanal */
+.horario td {
+    vertical-align: top;
+    min-width: 140px;
+}
+
+.bloque {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    margin-bottom: .5rem;
+    padding: .5rem .6rem;
+    background: var(--fondo);
+    border-left: 4px solid var(--celeste);
+    border-radius: 8px;
+}
+
+.bloque form {
+    margin-top: .3rem;
+}
+
+/* Agenda y lista de cursos */
+.lista {
+    list-style: none;
+    margin: .6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: .6rem;
+}
+
+.lista li {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: .8rem .9rem;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+}
+
+.lista p {
+    margin: .25rem 0 0;
+}
+
+.fecha {
+    flex: none;
+    font-weight: 700;
+    color: var(--celeste);
+}
+
+[hidden] {
+    display: none !important;
+}
