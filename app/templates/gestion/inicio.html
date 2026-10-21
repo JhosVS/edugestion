@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block titulo %}Gestión · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Gestión</h1>
+    <p class="suave">Usuarios, secciones, cursos, asignaciones y horarios</p>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+<section class="grid-stats">
+    <a class="stat" href="{{ url_for('gestion.usuarios', rol='alumno') }}"><span class="stat__valor">{{
+            total.alumnos }}</span><span class="stat__etiqueta">Alumnos activos</span></a>
+    <a class="stat stat--naranja" href="{{ url_for('gestion.usuarios', rol='docente') }}"><span
+            class="stat__valor">{{ total.docentes }}</span><span class="stat__etiqueta">Docentes activos</span></a>
+    <a class="stat stat--verde" href="{{ url_for('gestion.secciones') }}"><span class="stat__valor">{{
+            total.secciones }}</span><span class="stat__etiqueta">Secciones</span></a>
+    <a class="stat stat--verde" href="{{ url_for('gestion.cursos') }}"><span class="stat__valor">{{ total.cursos
+            }}</span><span class="stat__etiqueta">Cursos</span></a>
+    <a class="stat stat--rojo" href="{{ url_for('gestion.asignaciones') }}"><span class="stat__valor">{{
+            total.sin_docente }}</span><span class="stat__etiqueta">Cursos sin docente</span></a>
+</section>
+
+<section class="tarjeta">
+    <h2>Orden sugerido para un año nuevo</h2>
+    <ol>
+        <li>Crear las <a href="{{ url_for('gestion.secciones') }}">secciones</a> del año.</li>
+        <li>Revisar los <a href="{{ url_for('gestion.cursos') }}">cursos y sus competencias</a>.</li>
+        <li>Registrar <a href="{{ url_for('gestion.usuarios', rol='docente') }}">docentes</a> y <a
+                href="{{ url_for('gestion.usuarios', rol='alumno') }}">alumnos</a>.</li>
+        <li>Asignar <a href="{{ url_for('gestion.asignaciones') }}">docentes a cada curso</a> y armar los <a
+                href="{{ url_for('gestion.horarios') }}">horarios</a>.</li>
+    </ol>
+</section>
+{% endblock %}

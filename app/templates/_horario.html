@@ -1,0 +1,40 @@
+{# Horario semanal en columnas de lunes a viernes.
+   detalle: "docente" (vista de sección) o "seccion" (vista del docente).
+   eliminar: muestra un botón para borrar cada bloque (gestión). #}
+{% macro horario_semanal(bloques, dias, detalle="docente", eliminar=false) -%}
+{% if bloques %}
+<div class="tabla-scroll">
+    <table class="tabla horario">
+        <thead>
+            <tr>{% for nombre in dias.values() %}<th>{{ nombre }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for d in dias %}
+                <td>
+                    {% for b in bloques if b.dia_semana == d %}
+                    <div class="bloque">
+                        <small>{{ b.hora_inicio }} – {{ b.hora_fin }}</small>
+                        <strong>{{ b.curso }}</strong>
+                        <small class="suave">{% if detalle == "seccion" %}{{ b.grado }} "{{ b.seccion }}"{% else
+                            %}{{ b.docente }}{% endif %}</small>
+                        {% if eliminar %}
+                        <form method="post" action="{{ url_for('gestion.horario_eliminar', horario_id=b.id) }}"
+                            onsubmit="return confirm('¿Quitar este bloque del horario?')">
+                            <button class="btn btn--rojo btn--mini">Quitar</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <span class="suave">—</span>
+                    {% endfor %}
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="suave">Aún no hay horario registrado.</p>
+{% endif %}
+{%- endmacro %}

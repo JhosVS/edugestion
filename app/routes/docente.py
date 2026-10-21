@@ -1,10 +1,12 @@
 from datetime import date
 
-from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
+from flask import (Blueprint, abort, flash, g, redirect, render_template, request, send_file,
+                   url_for)
 
 from ..auth import login_required
-from ..consultas import avance_notas
+from ..consultas import DIAS_SEMANA, avance_notas, horario
 from ..db import get_db
+from ..siagie import generar_excel
 
 bp = Blueprint("docente", __name__, url_prefix="/docente")
 
@@ -12,7 +14,7 @@ ESTADOS = {"P": "Presente", "T": "Tardanza", "F": "Falta"}
 CALIFICATIVOS = ("AD", "A", "B", "C")
 
 ALUMNOS_SQL = ("SELECT u.id, u.apellidos || ', ' || u.nombres AS nombre FROM alumnos al "
-               "JOIN usuarios u ON u.id = al.usuario_id WHERE al.seccion_id = ? "
+               "JOIN usuarios u ON u.id = al.usuario_id WHERE al.seccion_id = ? AND u.activo = 1 "
                "ORDER BY u.apellidos, u.nombres")
 
 
@@ -58,9 +60,11 @@ def _asignacion_del_docente(asignacion_id):
 @login_required("docente")
 def inicio():
     bimestre = _bimestre()
-    cursos = avance_notas(get_db(), bimestre, g.usuario["id"])
+    db = get_db()
+    cursos = avance_notas(db, bimestre, g.usuario["id"])
     return render_template("docente/inicio.html", cursos=cursos, bimestre=bimestre,
-                           n_secciones=len({c["seccion_id"] for c in cursos}))
+                           n_secciones=len({c["seccion_id"] for c in cursos}),
+                           bloques=horario(db, docente_id=g.usuario["id"]), dias=DIAS_SEMANA)
 
 
 # --------------------------------------------------------------------------
@@ -160,3 +164,57 @@ def notas_asignacion(asignacion_id):
     return render_template("docente/notas.html", asig=asig, bimestre=bimestre, alumnos=alumnos,
                            competencias=competencias, previos=previos,
                            calificativos=CALIFICATIVOS)
+
+@bp.route("/notas/<int:asignacion_id>/siagie")
+@login_required("docente")
+def notas_siagie(asignacion_id):
+    asig = _asignacion_del_docente(asignacion_id)
+    archivo, nombre, _ = generar_excel(get_db(), asig["seccion_id"], _bimestre(), asignacion_id)
+    return send_file(archivo, as_attachment=True, download_name=nombre)
+
+
+# --------------------------------------------------------------------------
+# Agenda: tareas y avisos por sección
+# --------------------------------------------------------------------------
+@bp.route("/agenda", methods=["GET", "POST"])
+@login_required("docente")
+def agenda():
+    db = get_db()
+    if request.method == "POST":
+        seccion = _seccion_del_docente(request.form.get("seccion_id", type=int))
+        titulo = request.form.get("titulo", "").strip()
+        try:
+            fecha = date.fromisoformat(request.form.get("fecha", "")).isoformat()
+        except ValueError:
+            fecha = None
+        if titulo and fecha:
+            db.execute("INSERT INTO agenda(seccion_id, titulo, descripcion, fecha, creado_por) "
+                       "VALUES (?,?,?,?,?)", (seccion["id"], titulo[:120],
+                                              request.form.get("descripcion", "").strip()[:500],
+                                              fecha, g.usuario["id"]))
+            db.commit()
+            flash("Actividad agregada a la agenda.", "ok")
+        else:
+            flash("Escribe un título y una fecha válida.", "error")
+        return redirect(url_for("docente.agenda"))
+
+    secciones = db.execute(
+        "SELECT DISTINCT s.id, s.grado, s.seccion FROM asignaciones a "
+        "JOIN secciones s ON s.id = a.seccion_id WHERE a.docente_id = ? "
+        "ORDER BY s.grado, s.seccion", (g.usuario["id"],)).fetchall()
+    entradas = db.execute(
+        "SELECT ag.id, ag.titulo, ag.descripcion, ag.fecha, s.grado, s.seccion FROM agenda ag "
+        "JOIN secciones s ON s.id = ag.seccion_id WHERE ag.creado_por = ? AND ag.fecha >= ? "
+        "ORDER BY ag.fecha, s.grado, s.seccion", (g.usuario["id"], date.today().isoformat())).fetchall()
+    return render_template("docente/agenda.html", secciones=secciones, entradas=entradas,
+                           hoy=date.today().isoformat())
+
+
+@bp.route("/agenda/<int:agenda_id>/eliminar", methods=["POST"])
+@login_required("docente")
+def agenda_eliminar(agenda_id):
+    db = get_db()
+    db.execute("DELETE FROM agenda WHERE id = ? AND creado_por = ?", (agenda_id, g.usuario["id"]))
+    db.commit()
+    flash("Actividad eliminada.", "ok")
+    return redirect(url_for("docente.agenda"))

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block titulo %}Cursos · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Cursos y competencias</h1>
+    <p class="suave">La evaluación del CNEB se registra por competencia</p>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+<form method="post" class="tarjeta barra">
+    <input name="nombre" maxlength="80" required placeholder="Nombre del nuevo curso (área)">
+    <button class="btn btn--verde btn--chico">Crear curso</button>
+</form>
+
+{% for c in cursos %}
+<section class="tarjeta">
+    <div class="barra">
+        <h2>{{ c.nombre }}</h2>
+        {% if not c.asignaciones %}
+        <form method="post" class="en-linea" action="{{ url_for('gestion.curso_eliminar', curso_id=c.id) }}"
+            onsubmit="return confirm('¿Eliminar este curso y sus competencias?')">
+            <button class="btn btn--rojo btn--mini">Eliminar curso</button>
+        </form>
+        {% else %}
+        <span class="suave"><small>Asignado en {{ c.asignaciones }} sección(es)</small></span>
+        {% endif %}
+    </div>
+    <ul class="lista">
+        {% for co in c.competencias %}
+        <li>
+            <span>{{ co.nombre }}</span>
+            {% if co.notas %}
+            <small class="suave">{{ co.notas }} calificativos</small>
+            {% else %}
+            <form method="post" class="en-linea"
+                action="{{ url_for('gestion.competencia_eliminar', competencia_id=co.id) }}"
+                onsubmit="return confirm('¿Eliminar esta competencia?')">
+                <button class="btn btn--rojo btn--mini">Quitar</button>
+            </form>
+            {% endif %}
+        </li>
+        {% else %}
+        <li class="suave">Sin competencias: agrega al menos una para poder registrar notas.</li>
+        {% endfor %}
+    </ul>
+    <form method="post" class="barra" action="{{ url_for('gestion.competencia_nueva', curso_id=c.id) }}"
+        style="margin-top: .8rem">
+        <input name="nombre" maxlength="200" required placeholder="Nueva competencia">
+        <button class="btn btn--celeste btn--chico">Agregar</button>
+    </form>
+</section>
+{% else %}
+<section class="tarjeta">
+    <p class="suave">Aún no hay cursos.</p>
+</section>
+{% endfor %}
+{% endblock %}

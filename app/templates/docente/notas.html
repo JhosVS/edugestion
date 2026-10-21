@@ -12,7 +12,12 @@
             <option value="{{ b }}" {% if b==bimestre %}selected{% endif %}>Bimestre {{ b }}</option>{% endfor %}
         </select>
         <button class="btn btn--celeste btn--chico">Ver</button>
+        <a class="btn btn--naranja btn--chico"
+            href="{{ url_for('docente.notas_siagie', asignacion_id=asig.id, bimestre=bimestre) }}">Descargar Excel
+            SIAGIE</a>
     </form>
+    <p class="suave"><small>El Excel incluye los calificativos guardados. Guarda tus cambios antes de
+            descargarlo.</small></p>
 </section>
 
 <form method="post" class="tarjeta">

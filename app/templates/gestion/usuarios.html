@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block titulo %}Usuarios · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Usuarios</h1>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+<section class="tarjeta">
+    <div class="barra">
+        {% for clave, nombre in roles.items() %}
+        <a class="btn btn--chico {% if clave == rol %}btn--celeste{% else %}btn--borde{% endif %}"
+            href="{{ url_for('gestion.usuarios', rol=clave) }}">{{ nombre }}s</a>
+        {% endfor %}
+        <a class="btn btn--verde btn--chico" href="{{ url_for('gestion.usuario_nuevo', rol=rol) }}">+ Nuevo {{
+            roles[rol]|lower }}</a>
+    </div>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Apellidos y nombres</th>
+                    <th>Correo</th>
+                    {% if rol == "alumno" %}<th>Sección</th>
+                    <th>DNI</th>{% endif %}
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ u.apellidos }}, {{ u.nombres }}</td>
+                    <td>{{ u.correo }}</td>
+                    {% if rol == "alumno" %}<td>{{ u.grado }} "{{ u.seccion }}"</td>
+                    <td>{{ u.dni or "—" }}</td>{% endif %}
+                    <td>{% if u.activo %}<span class="chip chip--P">Activo</span>{% else %}<span
+                            class="chip chip--F">Inactivo</span>{% endif %}</td>
+                    <td><a class="btn btn--naranja btn--chico"
+                            href="{{ url_for('gestion.usuario_editar', usuario_id=u.id) }}">Editar</a></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="suave">No hay usuarios con este rol.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

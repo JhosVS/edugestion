@@ -18,6 +18,10 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = EN_RENDER  # cookie solo por HTTPS en producción
 
+    # Datos que encabezan el Excel para el SIAGIE.
+    INSTITUCION = os.environ.get("INSTITUCION", "I.E. César Vallejo")
+    CODIGO_MODULAR = os.environ.get("CODIGO_MODULAR", "")
+
     # Solo para pruebas / exposición académica. Se puede ocultar con MOSTRAR_DEMO=0.
     MOSTRAR_CREDENCIALES_DEMO = os.environ.get("MOSTRAR_DEMO", "1") == "1"
     CREDENCIALES_DEMO = [

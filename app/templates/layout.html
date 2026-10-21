@@ -9,7 +9,7 @@
     </a>
     <nav class="nav" aria-label="Menú principal">
         {% for endpoint, texto, ico in menu %}
-        <a class="nav__item {% if request.endpoint.startswith(endpoint) %}activo{% endif %}"
+        <a class="nav__item {% if menu_activo(endpoint) %}activo{% endif %}"
             href="{{ url_for(endpoint) }}">{{
             icono(ico) }}<span>{{ texto }}</span></a>
         {% endfor %}

@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block titulo %}Agenda · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Agenda</h1>
+    <p class="suave">Tareas y avisos que verán los alumnos de la sección</p>
+</div>
+
+<form method="post" class="tarjeta formulario">
+    <h2>Nueva actividad</h2>
+    {% if secciones %}
+    <div class="form-grid">
+        <div>
+            <label for="seccion_id">Sección</label>
+            <select id="seccion_id" name="seccion_id" required>
+                {% for s in secciones %}<option value="{{ s.id }}">{{ s.grado }} "{{ s.seccion }}"</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="fecha">Fecha</label>
+            <input id="fecha" name="fecha" type="date" min="{{ hoy }}" value="{{ hoy }}" required>
+        </div>
+        <div class="completo">
+            <label for="titulo">Título</label>
+            <input id="titulo" name="titulo" maxlength="120" required placeholder="Ej.: Práctica calificada">
+        </div>
+        <div class="completo">
+            <label for="descripcion">Descripción (opcional)</label>
+            <textarea id="descripcion" name="descripcion" rows="2" maxlength="500"></textarea>
+        </div>
+    </div>
+    <button class="btn btn--verde">Agregar</button>
+    {% else %}
+    <p class="suave">Aún no tienes secciones asignadas.</p>
+    {% endif %}
+</form>
+
+<section class="tarjeta">
+    <h2>Próximas actividades</h2>
+    <ul class="lista">
+        {% for e in entradas %}
+        <li>
+            <div>
+                <strong>{{ e.titulo }}</strong> <span class="suave">· {{ e.grado }} "{{ e.seccion }}"</span>
+                {% if e.descripcion %}<p>{{ e.descripcion }}</p>{% endif %}
+                <form method="post" class="en-linea" action="{{ url_for('docente.agenda_eliminar', agenda_id=e.id) }}"
+                    onsubmit="return confirm('¿Eliminar esta actividad?')">
+                    <button class="btn btn--rojo btn--mini">Eliminar</button>
+                </form>
+            </div>
+            <span class="fecha">{% if e.fecha == hoy %}Hoy{% else %}{{ e.fecha|fecha_corta }}{% endif %}</span>
+        </li>
+        {% else %}
+        <li class="suave">No hay actividades programadas.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

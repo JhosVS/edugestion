@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block titulo %}Asignaciones · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Asignaciones</h1>
+    <p class="suave">Qué docente dicta cada curso en la sección</p>
+</div>
+{% include "gestion/_pestanas.html" %}
+
+{% if seccion %}
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="seccion">
+            {% for s in secciones %}
+            <option value="{{ s.id }}" {% if s.id==seccion.id %}selected{% endif %}>{{ s.anio }} · {{ s.grado }} "{{
+                s.seccion }}"</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn--celeste btn--chico">Ver</button>
+    </form>
+</section>
+
+<form method="post" class="tarjeta">
+    <input type="hidden" name="seccion" value="{{ seccion.id }}">
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Docente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in filas %}
+                <tr>
+                    <td>{{ f.nombre }}</td>
+                    <td>
+                        <select name="doc_{{ f.id }}">
+                            <option value="">— Sin asignar —</option>
+                            {% for d in docentes %}
+                            <option value="{{ d.id }}" {% if d.id==f.docente_id %}selected{% endif %}>{{ d.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="suave">Primero crea cursos.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p class="suave"><small>Quitar un docente ("Sin asignar") también quita ese curso del horario de la sección. Los
+            calificativos ya registrados se conservan.</small></p>
+    <div class="acciones">
+        <button class="btn btn--verde">Guardar asignaciones</button>
+        <a class="btn btn--celeste" href="{{ url_for('gestion.horarios', seccion=seccion.id) }}">Ir al horario</a>
+    </div>
+</form>
+{% else %}
+<section class="tarjeta">
+    <p class="suave">Primero crea una <a href="{{ url_for('gestion.secciones') }}">sección</a>.</p>
+</section>
+{% endif %}
+{% endblock %}

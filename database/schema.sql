@@ -26,9 +26,11 @@ CREATE TABLE IF NOT EXISTS secciones (
 );
 
 -- Un alumno es un usuario con rol 'alumno' que pertenece a una sección.
+-- dni: documento con el que el SIAGIE identifica al estudiante (índice único en db.py).
 CREATE TABLE IF NOT EXISTS alumnos (
     usuario_id  INTEGER PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
-    seccion_id  INTEGER NOT NULL REFERENCES secciones(id)
+    seccion_id  INTEGER NOT NULL REFERENCES secciones(id),
+    dni         TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cursos (
@@ -79,7 +81,7 @@ CREATE TABLE IF NOT EXISTS calificaciones (
 );
 
 -- ============================================================
---  PRÓXIMAMENTE (esquema listo, sin pantallas todavía)
+--  HORARIOS Y AGENDA
 -- ============================================================
 CREATE TABLE IF NOT EXISTS horarios (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,

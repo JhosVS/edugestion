@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "_horario.html" import horario_semanal %}
 {% block titulo %}Inicio · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
@@ -52,5 +53,10 @@
             </tbody>
         </table>
     </div>
+</section>
+
+<section class="tarjeta">
+    <h2>Mi horario</h2>
+    {{ horario_semanal(bloques, dias, detalle="seccion") }}
 </section>
 {% endblock %}
