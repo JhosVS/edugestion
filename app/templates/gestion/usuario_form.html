@@ -7,7 +7,7 @@
 </div>
 {% include "gestion/_pestanas.html" %}
 
-<form method="post" class="tarjeta formulario">
+<form method="post" class="tarjeta formulario">{{ csrf_campo() }}
     <div class="form-grid">
         {% if nuevo %}
         <div class="completo">

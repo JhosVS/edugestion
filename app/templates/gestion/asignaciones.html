@@ -20,7 +20,7 @@
     </form>
 </section>
 
-<form method="post" class="tarjeta">
+<form method="post" class="tarjeta">{{ csrf_campo() }}
     <input type="hidden" name="seccion" value="{{ seccion.id }}">
     <div class="tabla-scroll">
         <table class="tabla">

@@ -20,7 +20,7 @@
                             %}{{ b.docente }}{% endif %}</small>
                         {% if eliminar %}
                         <form method="post" action="{{ url_for('gestion.horario_eliminar', horario_id=b.id) }}"
-                            onsubmit="return confirm('¿Quitar este bloque del horario?')">
+                            onsubmit="return confirm('¿Quitar este bloque del horario?')">{{ csrf_campo() }}
                             <button class="btn btn--rojo btn--mini">Quitar</button>
                         </form>
                         {% endif %}

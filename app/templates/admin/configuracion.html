@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block titulo %}Configuración · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Configuración</h1>
+    <p class="suave">Datos de la institución y del año lectivo</p>
+</div>
+
+<form method="post" class="tarjeta formulario">{{ csrf_campo() }}
+    <h2>Institución</h2>
+    <div class="form-grid">
+        <div>
+            <label for="institucion">Nombre de la institución</label>
+            <input id="institucion" name="institucion" value="{{ ajustes.institucion }}" maxlength="120" required>
+        </div>
+        <div>
+            <label for="lugar">Lugar</label>
+            <input id="lugar" name="lugar" value="{{ ajustes.lugar }}" maxlength="80">
+        </div>
+        <div>
+            <label for="codigo_modular">Código modular</label>
+            <input id="codigo_modular" name="codigo_modular" value="{{ ajustes.codigo_modular }}"
+                inputmode="numeric" pattern="\d{6,10}" placeholder="Aparece en el Excel SIAGIE">
+        </div>
+    </div>
+
+    <h2 style="margin-top: 1.5rem">Año lectivo</h2>
+    <div class="form-grid">
+        <div>
+            <label for="anio_lectivo">Año lectivo</label>
+            <input id="anio_lectivo" name="anio_lectivo" type="number" min="2000" max="2100"
+                value="{{ ajustes.anio_lectivo }}" required>
+        </div>
+        <div>
+            <label for="bimestre_actual">Bimestre actual</label>
+            <select id="bimestre_actual" name="bimestre_actual">
+                {% for b in ["1", "2", "3", "4"] %}
+                <option value="{{ b }}" {% if b==ajustes.bimestre_actual %}selected{% endif %}>Bimestre {{ b }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <p class="suave"><small>El bimestre actual es el que se abre por defecto en Notas, en el panel del director y en
+            SIAGIE. Las secciones nuevas se crean con el año lectivo.</small></p>
+
+    <h2 style="margin-top: 1.5rem">Inicio de sesión</h2>
+    <label class="check"><input type="checkbox" name="mostrar_demo" value="1" {% if ajustes.mostrar_demo=="1"
+            %}checked{% endif %}> Mostrar las credenciales de prueba en la pantalla de inicio de sesión</label>
+    <p class="suave"><small>Desactívalo antes de usar el sistema con datos reales.</small></p>
+
+    <button class="btn btn--verde">Guardar configuración</button>
+</form>
+{% endblock %}

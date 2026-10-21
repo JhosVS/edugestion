@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block titulo %}Mi cuenta · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Mi cuenta</h1>
+    <p class="suave">{{ g.usuario.nombres }} {{ g.usuario.apellidos }} · {{ g.usuario.correo }} · {{
+        nombre_rol[g.usuario.rol] }}</p>
+</div>
+
+<form method="post" class="tarjeta formulario">{{ csrf_campo() }}
+    <h2>Cambiar contraseña</h2>
+    <div class="form-grid">
+        <div class="completo">
+            <label for="actual">Contraseña actual</label>
+            <input id="actual" name="actual" type="password" autocomplete="current-password" required>
+        </div>
+        <div>
+            <label for="nueva">Nueva contraseña</label>
+            <input id="nueva" name="nueva" type="password" minlength="6" autocomplete="new-password" required
+                placeholder="Mínimo 6 caracteres">
+        </div>
+        <div>
+            <label for="confirmar">Repite la nueva contraseña</label>
+            <input id="confirmar" name="confirmar" type="password" minlength="6" autocomplete="new-password"
+                required>
+        </div>
+    </div>
+    <button class="btn btn--verde">Guardar contraseña</button>
+</form>
+{% endblock %}

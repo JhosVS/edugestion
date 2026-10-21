@@ -20,7 +20,7 @@
             descargarlo.</small></p>
 </section>
 
-<form method="post" class="tarjeta">
+<form method="post" class="tarjeta">{{ csrf_campo() }}
     <input type="hidden" name="bimestre" value="{{ bimestre }}">
     <div class="tabla-scroll">
         <table class="tabla">

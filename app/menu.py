@@ -22,7 +22,17 @@ MENUS = {
         ("director.siagie", "SIAGIE", "siagie"),
         ("gestion.inicio", "Gestión", "gestion"),
     ],
+    "admin": [
+        ("admin.inicio", "Panel", "inicio"),
+        ("gestion.inicio", "Gestión", "gestion"),
+        ("admin.auditoria", "Auditoría", "auditoria"),
+        ("admin.configuracion", "Configuración", "configuracion"),
+        ("admin.respaldo", "Respaldo", "respaldo"),
+    ],
 }
+
+NOMBRE_ROL = {"alumno": "Alumno", "docente": "Docente", "director": "Director",
+              "admin": "Administrador"}
 
 # Blueprints que ocupan un solo ítem del menú: cualquiera de sus vistas lo resalta.
 BLUEPRINTS_DE_UN_ITEM = {"gestion"}
@@ -41,4 +51,4 @@ def init_app(app):
     def inyectar_menu():
         usuario = g.get("usuario")
         return {"menu": MENUS.get(usuario["rol"], []) if usuario else [],
-                "menu_activo": menu_activo}
+                "menu_activo": menu_activo, "nombre_rol": NOMBRE_ROL}

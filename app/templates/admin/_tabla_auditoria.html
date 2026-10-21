@@ -1,0 +1,32 @@
+{# Tabla de eventos. Espera la variable `recientes` o `filas`. #}
+{% set eventos = filas if filas is defined else recientes %}
+<div class="tabla-scroll">
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Usuario</th>
+                <th>Acción</th>
+                <th>Detalle</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in eventos %}
+            <tr>
+                <td><small>{{ e.fecha|fecha_hora }}</small></td>
+                <td>{% if e.usuario %}{{ e.usuario }}<br><small class="suave">{{ nombre_rol[e.rol] }}</small>{% else
+                    %}<span class="suave">—</span>{% endif %}</td>
+                <td><span class="chip chip--{{ 'F' if e.accion in ('login_fallido', 'login_bloqueado') else 'evento' }}">{{
+                        acciones_nombre.get(e.accion, e.accion) }}</span></td>
+                <td><small>{{ e.detalle or "" }}</small></td>
+                <td><small class="suave">{{ e.ip or "" }}</small></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="suave">No hay eventos.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

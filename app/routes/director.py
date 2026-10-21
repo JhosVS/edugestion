@@ -2,6 +2,7 @@ from datetime import date
 
 from flask import Blueprint, abort, render_template, request, send_file
 
+from ..ajustes import bimestre_actual
 from ..auth import login_required
 from ..consultas import avance_notas
 from ..db import get_db
@@ -11,8 +12,8 @@ bp = Blueprint("director", __name__, url_prefix="/director")
 
 
 def _bimestre():
-    b = request.args.get("bimestre", 1, type=int)
-    return b if b in (1, 2, 3, 4) else 1
+    b = request.args.get("bimestre", type=int)
+    return b if b in (1, 2, 3, 4) else bimestre_actual()
 
 
 def _fecha_opcional(nombre):

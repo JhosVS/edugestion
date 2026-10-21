@@ -13,7 +13,7 @@
     </form>
 </section>
 
-<form method="post" class="tarjeta">
+<form method="post" class="tarjeta">{{ csrf_campo() }}
     <input type="hidden" name="fecha" value="{{ fecha }}">
     {% for a in alumnos %}
     <div class="fila">

@@ -1,26 +1,34 @@
-"""Gestión de datos maestros (solo director): usuarios, secciones, cursos,
-asignaciones docente-curso-sección y horarios."""
+"""Gestión de datos maestros (director y administrador): usuarios, secciones, cursos,
+asignaciones docente-curso-sección y horarios. Solo un administrador gestiona
+cuentas de administrador."""
 import re
 import sqlite3
-from datetime import date
-
 from flask import Blueprint, abort, flash, g, redirect, render_template, request, url_for
 from werkzeug.security import generate_password_hash
 
+from ..ajustes import ajustes
+from ..auditoria import registrar
 from ..auth import login_required
 from ..consultas import DIAS_SEMANA, horario
 from ..db import get_db
 
 bp = Blueprint("gestion", __name__, url_prefix="/director/gestion")
 
-ROLES = {"alumno": "Alumno", "docente": "Docente", "director": "Director"}
+ROLES = {"alumno": "Alumno", "docente": "Docente", "director": "Director", "admin": "Administrador"}
 HORA = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
 @bp.before_request
-@login_required("director")
-def solo_director():
-    """Todas las vistas de este Blueprint exigen el rol director."""
+@login_required("director", "admin")
+def solo_director_o_admin():
+    """Todas las vistas de este Blueprint exigen el rol director o admin."""
+
+
+def _roles_visibles():
+    """El director no ve ni crea cuentas de administrador (así no puede darse ese rol)."""
+    if g.usuario["rol"] == "admin":
+        return ROLES
+    return {k: v for k, v in ROLES.items() if k != "admin"}
 
 
 def _secciones():
@@ -60,14 +68,15 @@ def inicio():
 # --------------------------------------------------------------------------
 @bp.route("/usuarios")
 def usuarios():
+    roles = _roles_visibles()
     rol = request.args.get("rol", "alumno")
-    rol = rol if rol in ROLES else "alumno"
+    rol = rol if rol in roles else "alumno"
     lista = get_db().execute(
         "SELECT u.id, u.nombres, u.apellidos, u.correo, u.activo, al.dni, s.grado, s.seccion "
         "FROM usuarios u LEFT JOIN alumnos al ON al.usuario_id = u.id "
         "LEFT JOIN secciones s ON s.id = al.seccion_id WHERE u.rol = ? "
         "ORDER BY u.activo DESC, s.grado, s.seccion, u.apellidos, u.nombres", (rol,)).fetchall()
-    return render_template("gestion/usuarios.html", usuarios=lista, rol=rol, roles=ROLES)
+    return render_template("gestion/usuarios.html", usuarios=lista, rol=rol, roles=roles)
 
 
 def _leer_usuario(actual):
@@ -85,7 +94,7 @@ def _leer_usuario(actual):
         errores.append("Completa nombres, apellidos y correo.")
     elif not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", d["correo"]):
         errores.append("El correo no es válido.")
-    if d["rol"] not in ROLES:
+    if d["rol"] not in _roles_visibles():
         errores.append("Elige un rol.")
     if (actual is None or d["clave"]) and len(d["clave"]) < 6:
         errores.append("La contraseña debe tener al menos 6 caracteres.")
@@ -128,13 +137,24 @@ def _form_usuario(actual=None):
                 db.rollback()
                 errores.append("El correo o el DNI ya está registrado.")
             else:
+                nombre = f'{d["nombres"]} {d["apellidos"]} ({d["correo"]})'
+                if actual is None:
+                    registrar("usuario", f"Creó {ROLES[d['rol']].lower()}: {nombre}")
+                else:
+                    campos = ["nombres", "apellidos", "correo", "activo"]
+                    if d["rol"] == "alumno":
+                        campos += ["dni", "seccion_id"]
+                    cambios = [c for c in campos if str(actual[c] or "") != str(d[c] or "")]
+                    if d["clave"]:
+                        cambios.append("contraseña")
+                    registrar("usuario", f"Editó {nombre}: {', '.join(cambios) or 'sin cambios'}")
                 flash("Usuario guardado.", "ok")
                 return redirect(url_for("gestion.usuarios", rol=d["rol"]))
         for e in errores:
             flash(e, "error")
         datos = {**datos, **d}
     return render_template("gestion/usuario_form.html", u=datos, nuevo=actual is None,
-                           roles=ROLES, secciones=_secciones())
+                           roles=_roles_visibles(), secciones=_secciones())
 
 
 @bp.route("/usuarios/nuevo", methods=["GET", "POST"])
@@ -148,7 +168,11 @@ def usuario_editar(usuario_id):
         "SELECT u.id, u.nombres, u.apellidos, u.correo, u.rol, u.activo, al.dni, al.seccion_id "
         "FROM usuarios u LEFT JOIN alumnos al ON al.usuario_id = u.id WHERE u.id = ?",
         (usuario_id,)).fetchone()
-    return _form_usuario(u or abort(404))
+    if u is None:
+        abort(404)
+    if u["rol"] not in _roles_visibles():
+        abort(403)
+    return _form_usuario(u)
 
 
 # --------------------------------------------------------------------------
@@ -168,6 +192,7 @@ def secciones():
                 db.execute("INSERT INTO secciones(anio, grado, seccion) VALUES (?,?,?)",
                            (anio, grado[:20], letra[:5]))
                 db.commit()
+                registrar("seccion", f'Creó {anio} {grado} "{letra}"')
                 flash(f'Sección {grado} "{letra}" creada.', "ok")
             except sqlite3.IntegrityError:
                 flash("Esa sección ya existe.", "error")
@@ -178,7 +203,7 @@ def secciones():
         "  WHERE al.seccion_id = s.id AND u.activo = 1) AS alumnos, "
         " (SELECT COUNT(*) FROM asignaciones a WHERE a.seccion_id = s.id) AS cursos "
         "FROM secciones s ORDER BY s.anio DESC, s.grado, s.seccion").fetchall()
-    return render_template("gestion/secciones.html", secciones=lista, anio=date.today().year)
+    return render_template("gestion/secciones.html", secciones=lista, anio=ajustes()["anio_lectivo"])
 
 
 @bp.route("/secciones/<int:seccion_id>/eliminar", methods=["POST"])
@@ -191,8 +216,11 @@ def seccion_eliminar(seccion_id):
     if ocupada:
         flash("No se puede eliminar: la sección tiene alumnos o cursos asignados.", "error")
     else:
+        s = db.execute("SELECT anio, grado, seccion FROM secciones WHERE id = ?",
+                       (seccion_id,)).fetchone() or abort(404)
         db.execute("DELETE FROM secciones WHERE id = ?", (seccion_id,))
         db.commit()
+        registrar("seccion", f'Eliminó {s["anio"]} {s["grado"]} "{s["seccion"]}"')
         flash("Sección eliminada.", "ok")
     return redirect(url_for("gestion.secciones"))
 
@@ -211,6 +239,7 @@ def cursos():
             try:
                 db.execute("INSERT INTO cursos(nombre) VALUES (?)", (nombre[:80],))
                 db.commit()
+                registrar("curso", f"Creó el curso {nombre[:80]}")
                 flash(f"Curso {nombre} creado. Ahora agrégale sus competencias.", "ok")
             except sqlite3.IntegrityError:
                 flash("Ese curso ya existe.", "error")
@@ -241,8 +270,10 @@ def curso_eliminar(curso_id):
     if en_uso:
         flash("No se puede eliminar: el curso está asignado o ya tiene calificativos.", "error")
     else:
+        c = db.execute("SELECT nombre FROM cursos WHERE id = ?", (curso_id,)).fetchone() or abort(404)
         db.execute("DELETE FROM cursos WHERE id = ?", (curso_id,))
         db.commit()
+        registrar("curso", f"Eliminó el curso {c['nombre']}")
         flash("Curso eliminado.", "ok")
     return redirect(url_for("gestion.cursos"))
 
@@ -258,6 +289,7 @@ def competencia_nueva(curso_id):
             db.execute("INSERT INTO competencias(curso_id, nombre) VALUES (?,?)",
                        (curso_id, nombre[:200]))
             db.commit()
+            registrar("curso", f"Agregó la competencia '{nombre[:200]}' (curso {curso_id})")
             flash("Competencia agregada.", "ok")
         except sqlite3.IntegrityError:  # repetida o curso inexistente
             flash("No se pudo agregar: la competencia ya existe en ese curso.", "error")
@@ -271,8 +303,11 @@ def competencia_eliminar(competencia_id):
                   (competencia_id,)).fetchone()[0]:
         flash("No se puede eliminar: la competencia ya tiene calificativos registrados.", "error")
     else:
+        co = db.execute("SELECT nombre FROM competencias WHERE id = ?",
+                        (competencia_id,)).fetchone() or abort(404)
         db.execute("DELETE FROM competencias WHERE id = ?", (competencia_id,))
         db.commit()
+        registrar("curso", f"Eliminó la competencia '{co['nombre']}'")
         flash("Competencia eliminada.", "ok")
     return redirect(url_for("gestion.cursos"))
 
@@ -300,6 +335,7 @@ def asignaciones():
                 db.execute("DELETE FROM asignaciones WHERE curso_id = ? AND seccion_id = ?",
                            (curso_id, seccion["id"]))
         db.commit()
+        registrar("asignacion", f'Guardó las asignaciones de {seccion["grado"]} "{seccion["seccion"]}"')
         flash("Asignaciones guardadas.", "ok")
         return redirect(url_for("gestion.asignaciones", seccion=seccion["id"]))
 
@@ -346,6 +382,8 @@ def horarios():
                 db.execute("INSERT INTO horarios(asignacion_id, dia_semana, hora_inicio, hora_fin) "
                            "VALUES (?,?,?,?)", (asig["id"], dia, inicio, fin))
                 db.commit()
+                registrar("horario", f'{seccion["grado"]} "{seccion["seccion"]}": agregó '
+                                     f'{DIAS_SEMANA[dia]} {inicio}-{fin}')
                 flash("Bloque agregado al horario.", "ok")
         return redirect(url_for("gestion.horarios", seccion=seccion["id"]))
 
@@ -369,5 +407,6 @@ def horario_eliminar(horario_id):
         abort(404)
     db.execute("DELETE FROM horarios WHERE id = ?", (horario_id,))
     db.commit()
+    registrar("horario", f"Quitó un bloque del horario (sección {fila['seccion_id']})")
     flash("Bloque eliminado.", "ok")
     return redirect(url_for("gestion.horarios", seccion=fila["seccion_id"]))

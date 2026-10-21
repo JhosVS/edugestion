@@ -100,3 +100,6 @@ def cargar_datos(db):
                 db.execute("INSERT INTO calificaciones(alumno_id, competencia_id, bimestre, "
                            "calificativo, registrado_por) VALUES (?,?,1,?,?)",
                            (a, comp, rnd.choices(["AD", "A", "B", "C"], weights=[10, 50, 30, 10])[0], doc1))
+
+    # --- Administrador (al final para no cambiar los id de los demás usuarios) ---
+    usuario("Administrador", "del Sistema", "admin@edugestion.test", "admin123", "admin")

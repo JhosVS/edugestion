@@ -5,13 +5,13 @@
 <main class="login">
   <section class="tarjeta login__caja">
     <h1 class="marca"><img src="{{ url_for('static', filename='img/icon.svg') }}" alt="">Edu<span>Gestión</span></h1>
-    <p class="suave">I.E. César Vallejo · Cerro de Pasco</p>
+    <p class="suave">{{ ajustes.institucion }} · {{ ajustes.lugar }}</p>
 
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
     <div class="aviso aviso--{{ categoria }}">{{ mensaje }}</div>
     {% endfor %}
 
-    <form method="post" class="formulario" autocomplete="on">
+    <form method="post" class="formulario" autocomplete="on">{{ csrf_campo() }}
       <label for="correo">Correo</label>
       <input id="correo" name="correo" type="email" required autofocus placeholder="usuario@correo.com">
 
