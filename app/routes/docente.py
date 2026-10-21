@@ -3,6 +3,8 @@ from datetime import date
 from flask import (Blueprint, abort, flash, g, redirect, render_template, request, send_file,
                    url_for)
 
+from ..ajustes import bimestre_actual
+from ..auditoria import registrar
 from ..auth import login_required
 from ..consultas import DIAS_SEMANA, avance_notas, horario
 from ..db import get_db
@@ -22,8 +24,8 @@ ALUMNOS_SQL = ("SELECT u.id, u.apellidos || ', ' || u.nombres AS nombre FROM alu
 # Ayudas
 # --------------------------------------------------------------------------
 def _bimestre():
-    b = request.values.get("bimestre", 1, type=int)
-    return b if b in (1, 2, 3, 4) else 1
+    b = request.values.get("bimestre", type=int)
+    return b if b in (1, 2, 3, 4) else bimestre_actual()
 
 
 def _fecha():
@@ -102,6 +104,8 @@ def asistencia_seccion(seccion_id):
                     "estado = excluded.estado, registrado_por = excluded.registrado_por",
                     (a["id"], fecha, estado, g.usuario["id"]))
         db.commit()
+        registrar("asistencia", f'{seccion["grado"]} "{seccion["seccion"]}", {fecha}: '
+                                f'{len(alumnos)} alumnos')
         flash("Asistencia guardada.", "ok")
         return redirect(url_for("docente.asistencia_seccion", seccion_id=seccion_id, fecha=fecha))
 
@@ -137,10 +141,17 @@ def notas_asignacion(asignacion_id):
     competencias = db.execute("SELECT id, nombre FROM competencias WHERE curso_id = ? ORDER BY id",
                               (asig["curso_id"],)).fetchall()
 
+    previos = {(r["alumno_id"], r["competencia_id"]): r["calificativo"] for r in db.execute(
+        "SELECT k.alumno_id, k.competencia_id, k.calificativo FROM calificaciones k "
+        "JOIN competencias co ON co.id = k.competencia_id "
+        "WHERE co.curso_id = ? AND k.bimestre = ?", (asig["curso_id"], bimestre))}
+
     if request.method == "POST":
+        cambios = 0
         for a in alumnos:
             for c in competencias:
                 valor = request.form.get(f"n_{a['id']}_{c['id']}", "")
+                cambios += valor != previos.get((a["id"], c["id"]), "")
                 if valor in CALIFICATIVOS:
                     db.execute(
                         "INSERT INTO calificaciones(alumno_id, competencia_id, bimestre, "
@@ -153,14 +164,13 @@ def notas_asignacion(asignacion_id):
                     db.execute("DELETE FROM calificaciones WHERE alumno_id = ? "
                                "AND competencia_id = ? AND bimestre = ?", (a["id"], c["id"], bimestre))
         db.commit()
+        if cambios:
+            registrar("notas", f'{asig["curso"]} {asig["grado"]} "{asig["seccion"]}", bimestre '
+                               f'{bimestre}: {cambios} calificativos modificados')
         flash("Calificativos guardados.", "ok")
         return redirect(url_for("docente.notas_asignacion", asignacion_id=asignacion_id,
                                 bimestre=bimestre))
 
-    previos = {(r["alumno_id"], r["competencia_id"]): r["calificativo"] for r in db.execute(
-        "SELECT k.alumno_id, k.competencia_id, k.calificativo FROM calificaciones k "
-        "JOIN competencias co ON co.id = k.competencia_id "
-        "WHERE co.curso_id = ? AND k.bimestre = ?", (asig["curso_id"], bimestre))}
     return render_template("docente/notas.html", asig=asig, bimestre=bimestre, alumnos=alumnos,
                            competencias=competencias, previos=previos,
                            calificativos=CALIFICATIVOS)
@@ -193,6 +203,7 @@ def agenda():
                                               request.form.get("descripcion", "").strip()[:500],
                                               fecha, g.usuario["id"]))
             db.commit()
+            registrar("agenda", f'{seccion["grado"]} "{seccion["seccion"]}": {titulo[:120]} ({fecha})')
             flash("Actividad agregada a la agenda.", "ok")
         else:
             flash("Escribe un título y una fecha válida.", "error")
@@ -214,7 +225,9 @@ def agenda():
 @login_required("docente")
 def agenda_eliminar(agenda_id):
     db = get_db()
-    db.execute("DELETE FROM agenda WHERE id = ? AND creado_por = ?", (agenda_id, g.usuario["id"]))
+    if db.execute("DELETE FROM agenda WHERE id = ? AND creado_por = ?",
+                  (agenda_id, g.usuario["id"])).rowcount:
+        registrar("agenda", f"Eliminó la actividad {agenda_id}")
     db.commit()
     flash("Actividad eliminada.", "ok")
     return redirect(url_for("docente.agenda"))

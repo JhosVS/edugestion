@@ -7,7 +7,7 @@
 </div>
 {% include "gestion/_pestanas.html" %}
 
-<form method="post" class="tarjeta barra">
+<form method="post" class="tarjeta barra">{{ csrf_campo() }}
     <input name="nombre" maxlength="80" required placeholder="Nombre del nuevo curso (área)">
     <button class="btn btn--verde btn--chico">Crear curso</button>
 </form>
@@ -18,7 +18,7 @@
         <h2>{{ c.nombre }}</h2>
         {% if not c.asignaciones %}
         <form method="post" class="en-linea" action="{{ url_for('gestion.curso_eliminar', curso_id=c.id) }}"
-            onsubmit="return confirm('¿Eliminar este curso y sus competencias?')">
+            onsubmit="return confirm('¿Eliminar este curso y sus competencias?')">{{ csrf_campo() }}
             <button class="btn btn--rojo btn--mini">Eliminar curso</button>
         </form>
         {% else %}
@@ -34,7 +34,7 @@
             {% else %}
             <form method="post" class="en-linea"
                 action="{{ url_for('gestion.competencia_eliminar', competencia_id=co.id) }}"
-                onsubmit="return confirm('¿Eliminar esta competencia?')">
+                onsubmit="return confirm('¿Eliminar esta competencia?')">{{ csrf_campo() }}
                 <button class="btn btn--rojo btn--mini">Quitar</button>
             </form>
             {% endif %}
@@ -44,7 +44,7 @@
         {% endfor %}
     </ul>
     <form method="post" class="barra" action="{{ url_for('gestion.competencia_nueva', curso_id=c.id) }}"
-        style="margin-top: .8rem">
+        style="margin-top: .8rem">{{ csrf_campo() }}
         <input name="nombre" maxlength="200" required placeholder="Nueva competencia">
         <button class="btn btn--celeste btn--chico">Agregar</button>
     </form>

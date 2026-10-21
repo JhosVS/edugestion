@@ -1,17 +1,18 @@
 PRAGMA foreign_keys = ON;
 
 -- ============================================================
---  USUARIOS (alumnos, docentes y director comparten esta tabla)
+--  USUARIOS (alumnos, docentes, director y administrador comparten esta tabla)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS usuarios (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombres     TEXT NOT NULL,
-    apellidos   TEXT NOT NULL,
-    correo      TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    clave_hash  TEXT NOT NULL,
-    rol         TEXT NOT NULL CHECK (rol IN ('alumno', 'docente', 'director')),
-    activo      INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
-    creado_en   TEXT NOT NULL DEFAULT (datetime('now'))
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombres        TEXT NOT NULL,
+    apellidos      TEXT NOT NULL,
+    correo         TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    clave_hash     TEXT NOT NULL,
+    rol            TEXT NOT NULL CHECK (rol IN ('alumno', 'docente', 'director', 'admin')),
+    activo         INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
+    creado_en      TEXT NOT NULL DEFAULT (datetime('now')),
+    ultimo_acceso  TEXT                                   -- hora de Perú, AAAA-MM-DD HH:MM:SS
 );
 
 -- ============================================================
@@ -101,9 +102,30 @@ CREATE TABLE IF NOT EXISTS agenda (
 );
 
 -- ============================================================
+--  ADMINISTRACIÓN
+-- ============================================================
+-- Ajustes editables desde el panel (los valores por defecto están en app/ajustes.py).
+CREATE TABLE IF NOT EXISTS configuracion (
+    clave  TEXT PRIMARY KEY,
+    valor  TEXT NOT NULL
+);
+
+-- Bitácora: quién hizo qué y cuándo. usuario_id es NULL en intentos de acceso fallidos.
+CREATE TABLE IF NOT EXISTS auditoria (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha       TEXT NOT NULL,                           -- hora de Perú
+    usuario_id  INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    accion      TEXT NOT NULL,
+    detalle     TEXT,
+    ip          TEXT
+);
+
+-- ============================================================
 --  ÍNDICES
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_alumnos_seccion      ON alumnos(seccion_id);
 CREATE INDEX IF NOT EXISTS idx_asistencias_fecha    ON asistencias(fecha);
 CREATE INDEX IF NOT EXISTS idx_calif_bimestre       ON calificaciones(bimestre);
 CREATE INDEX IF NOT EXISTS idx_asignaciones_docente ON asignaciones(docente_id);
+CREATE INDEX IF NOT EXISTS idx_auditoria_fecha      ON auditoria(fecha);
+CREATE INDEX IF NOT EXISTS idx_auditoria_accion     ON auditoria(accion, fecha);

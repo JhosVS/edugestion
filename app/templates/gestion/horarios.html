@@ -21,7 +21,7 @@
     </form>
 </section>
 
-<form method="post" class="tarjeta formulario">
+<form method="post" class="tarjeta formulario">{{ csrf_campo() }}
     <h2>Agregar bloque</h2>
     <input type="hidden" name="seccion" value="{{ seccion.id }}">
     {% if asignaciones %}

@@ -10,7 +10,7 @@
     <div class="barra">
         {% for clave, nombre in roles.items() %}
         <a class="btn btn--chico {% if clave == rol %}btn--celeste{% else %}btn--borde{% endif %}"
-            href="{{ url_for('gestion.usuarios', rol=clave) }}">{{ nombre }}s</a>
+            href="{{ url_for('gestion.usuarios', rol=clave) }}">{{ nombre }}{{ "es" if nombre.endswith("r") else "s" }}</a>
         {% endfor %}
         <a class="btn btn--verde btn--chico" href="{{ url_for('gestion.usuario_nuevo', rol=rol) }}">+ Nuevo {{
             roles[rol]|lower }}</a>

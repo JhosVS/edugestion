@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block titulo %}Respaldo · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Respaldo</h1>
+    <p class="suave">Copia completa de la base de datos ({{ tamano }})</p>
+</div>
+
+<form method="post" action="{{ url_for('admin.respaldo_descargar') }}" class="tarjeta">{{ csrf_campo() }}
+    <h2>Descargar copia</h2>
+    <p class="suave">Incluye usuarios, notas, asistencia, horarios, agenda, configuración y auditoría. Guárdala en
+        un lugar seguro: contiene datos personales de estudiantes y las contraseñas cifradas.</p>
+    <button class="btn btn--verde">Descargar respaldo</button>
+</form>
+
+<section class="tarjeta">
+    <h2>Cómo restaurar</h2>
+    <ol>
+        <li>Detén el sistema.</li>
+        <li>Reemplaza el archivo <code>database/edugestion.db</code> por el respaldo (renómbralo a
+            <code>edugestion.db</code>).
+        </li>
+        <li>Vuelve a iniciar el sistema.</li>
+    </ol>
+    <p class="suave"><small>En Render el disco se borra en cada despliegue: descarga un respaldo antes de publicar
+            cambios.</small></p>
+</section>
+
+<section class="tarjeta">
+    <h2>Últimos respaldos</h2>
+    <ul class="lista">
+        {% for r in historial %}
+        <li><span>{{ r.fecha|fecha_hora }}</span><span class="suave">{{ r.usuario or "—" }}</span></li>
+        {% else %}
+        <li class="suave">Aún no se ha descargado ningún respaldo.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

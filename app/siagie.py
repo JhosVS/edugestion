@@ -8,11 +8,12 @@ import re
 import unicodedata
 from io import BytesIO
 
-from flask import current_app
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
+
+from .ajustes import ajustes
 
 CALIFICATIVOS = ("AD", "A", "B", "C")
 COLUMNAS_FIJAS = ("N.°", "DNI / Código", "Apellidos y nombres")
@@ -42,7 +43,7 @@ def _alumnos(db, seccion_id):
 def _hoja(wb, db, asig, alumnos, bimestre):
     """Llena una hoja con los calificativos de una asignación. Devuelve los faltantes."""
     ws = wb.create_sheet(re.sub(r"[\[\]:*?/\\]", "", asig["curso"])[:31])
-    cfg = current_app.config
+    cfg = ajustes()
     competencias = db.execute("SELECT id, nombre FROM competencias WHERE curso_id = ? ORDER BY id",
                               (asig["curso_id"],)).fetchall()
     notas = {(r["alumno_id"], r["competencia_id"]): r["calificativo"] for r in db.execute(
@@ -53,8 +54,8 @@ def _hoja(wb, db, asig, alumnos, bimestre):
     # --- Encabezado institucional ---
     ws["A1"] = "REGISTRO DE CALIFICATIVOS PARA CARGA EN SIAGIE"
     ws["A1"].font = TITULO
-    datos = [("Institución educativa", cfg["INSTITUCION"]),
-             ("Código modular", cfg["CODIGO_MODULAR"] or "—"),
+    datos = [("Institución educativa", f'{cfg["institucion"]} - {cfg["lugar"]}'),
+             ("Código modular", cfg["codigo_modular"] or "—"),
              ("Año / Grado y sección", f'{asig["anio"]} / {asig["grado"]} "{asig["seccion"]}"'),
              ("Área / Bimestre", f'{asig["curso"]} / Bimestre {bimestre}'),
              ("Docente", asig["docente"])]

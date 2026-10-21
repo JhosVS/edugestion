@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block titulo %}Auditoría · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Auditoría</h1>
+    <p class="suave">Quién hizo qué y cuándo (hora de Perú)</p>
+</div>
+
+<section class="tarjeta">
+    <form method="get" class="barra">
+        <select name="accion">
+            <option value="">Todas las acciones</option>
+            {% for clave, nombre in acciones.items() %}
+            <option value="{{ clave }}" {% if clave==f.accion %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+        </select>
+        <input name="texto" value="{{ f.texto }}" placeholder="Usuario, correo, detalle o IP">
+        <label>Desde <input type="date" name="desde" value="{{ f.desde or '' }}"></label>
+        <label>Hasta <input type="date" name="hasta" value="{{ f.hasta or '' }}"></label>
+        <button class="btn btn--celeste btn--chico">Filtrar</button>
+        <a class="btn btn--borde btn--chico" href="{{ url_for('admin.auditoria') }}">Limpiar</a>
+        <a class="btn btn--naranja btn--chico"
+            href="{{ url_for('admin.auditoria_csv', accion=f.accion, texto=f.texto, desde=f.desde or '', hasta=f.hasta or '') }}">Exportar
+            CSV</a>
+    </form>
+</section>
+
+<section class="tarjeta">
+    {% include "admin/_tabla_auditoria.html" %}
+    <div class="acciones">
+        {% if pagina > 1 %}
+        <a class="btn btn--borde btn--chico"
+            href="{{ url_for('admin.auditoria', pagina=pagina - 1, accion=f.accion, texto=f.texto, desde=f.desde or '', hasta=f.hasta or '') }}">←
+            Más recientes</a>
+        {% endif %}
+        {% if hay_mas %}
+        <a class="btn btn--borde btn--chico"
+            href="{{ url_for('admin.auditoria', pagina=pagina + 1, accion=f.accion, texto=f.texto, desde=f.desde or '', hasta=f.hasta or '') }}">Anteriores
+            →</a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

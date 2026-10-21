@@ -6,7 +6,7 @@
     <p class="suave">Tareas y avisos que verán los alumnos de la sección</p>
 </div>
 
-<form method="post" class="tarjeta formulario">
+<form method="post" class="tarjeta formulario">{{ csrf_campo() }}
     <h2>Nueva actividad</h2>
     {% if secciones %}
     <div class="form-grid">
@@ -44,7 +44,7 @@
                 <strong>{{ e.titulo }}</strong> <span class="suave">· {{ e.grado }} "{{ e.seccion }}"</span>
                 {% if e.descripcion %}<p>{{ e.descripcion }}</p>{% endif %}
                 <form method="post" class="en-linea" action="{{ url_for('docente.agenda_eliminar', agenda_id=e.id) }}"
-                    onsubmit="return confirm('¿Eliminar esta actividad?')">
+                    onsubmit="return confirm('¿Eliminar esta actividad?')">{{ csrf_campo() }}
                     <button class="btn btn--rojo btn--mini">Eliminar</button>
                 </form>
             </div>

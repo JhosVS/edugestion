@@ -23,10 +23,10 @@
             <strong>Edu<span>Gestión</span></strong>
         </div>
         <div class="topbar__usuario">
-            <div class="usuario-chip">
+            <a class="usuario-chip" href="{{ url_for('auth.cuenta') }}" title="Mi cuenta">
                 <strong>{{ g.usuario.nombres }} {{ g.usuario.apellidos }}</strong>
-                <small>{{ g.usuario.rol|capitalize }}</small>
-            </div>
+                <small>{{ nombre_rol[g.usuario.rol] }}</small>
+            </a>
             <a class="btn btn--rojo btn--chico btn--salir" href="{{ url_for('auth.logout') }}">
                 {{ icono("salir") }}<span>Salir</span>
             </a>

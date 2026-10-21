@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{% block titulo %}Panel · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Panel de administración</h1>
+    <p class="suave">{{ ajustes.institucion }} · Año lectivo {{ ajustes.anio_lectivo }} · Bimestre {{
+        ajustes.bimestre_actual }}</p>
+</div>
+
+{% for aviso in avisos %}
+<div class="aviso aviso--alerta">{{ aviso }}</div>
+{% endfor %}
+
+<section class="grid-stats">
+    {% for rol, nombre in [("alumno", "Alumnos"), ("docente", "Docentes"), ("director", "Directores"), ("admin",
+    "Administradores")] %}
+    {% set r = roles.get(rol) %}
+    <a class="stat {{ loop.cycle('', 'stat--naranja', 'stat--verde', 'stat--rojo') }}"
+        href="{{ url_for('gestion.usuarios', rol=rol) }}">
+        <span class="stat__valor">{{ r.activos if r else 0 }}</span>
+        <span class="stat__etiqueta">{{ nombre }} activos{% if r and r.total > r.activos %} · {{ r.total -
+            r.activos }} inactivos{% endif %}</span>
+    </a>
+    {% endfor %}
+</section>
+
+<section class="grid-stats">
+    <article class="stat stat--verde"><span class="stat__valor">{{ eventos.get("login", 0) }}</span><span
+            class="stat__etiqueta">Inicios de sesión (24 h)</span></article>
+    <a class="stat stat--rojo" href="{{ url_for('admin.auditoria', accion='login_fallido') }}"><span
+            class="stat__valor">{{ eventos.get("login_fallido", 0) }}</span><span class="stat__etiqueta">Intentos
+            fallidos (24 h)</span></a>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ eventos.get("notas", 0) }}</span><span
+            class="stat__etiqueta">Registros de notas (24 h)</span></article>
+    <a class="stat" href="{{ url_for('admin.respaldo') }}"><span class="stat__valor">{{ tamano }}</span><span
+            class="stat__etiqueta">Base de datos · último respaldo: {{ ultimo_respaldo|fecha_hora if ultimo_respaldo
+            else "nunca" }}</span></a>
+</section>
+
+<section class="tarjeta">
+    <h2>Datos del sistema</h2>
+    <div class="tabla-scroll">
+        <table class="tabla">
+            <tbody>
+                <tr>
+                    <td>Secciones</td>
+                    <td>{{ datos.secciones }}</td>
+                    <td>Cursos</td>
+                    <td>{{ datos.cursos }}</td>
+                </tr>
+                <tr>
+                    <td>Calificativos registrados</td>
+                    <td>{{ datos.calificaciones }}</td>
+                    <td>Registros de asistencia</td>
+                    <td>{{ datos.asistencias }}</td>
+                </tr>
+                <tr>
+                    <td>Eventos de auditoría</td>
+                    <td>{{ datos.auditoria }}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if nunca %}
+<section class="tarjeta">
+    <h2>Personal que aún no ha ingresado</h2>
+    <p class="suave">Docentes, directores y administradores activos sin ningún inicio de sesión.</p>
+    <ul class="lista">
+        {% for u in nunca %}
+        <li><span>{{ u.nombre }} <span class="suave">· {{ u.correo }}</span></span><span class="insignia">{{
+                nombre_rol[u.rol] }}</span></li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<section class="tarjeta">
+    <div class="barra">
+        <h2>Actividad reciente</h2>
+        <a class="btn btn--celeste btn--chico" href="{{ url_for('admin.auditoria') }}">Ver toda la auditoría</a>
+    </div>
+    {% include "admin/_tabla_auditoria.html" %}
+</section>
+{% endblock %}
