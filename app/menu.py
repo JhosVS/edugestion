@@ -1,3 +1,4 @@
+# app/menu.py
 """Menú lateral por rol: (endpoint, texto, icono)."""
 from flask import g, request
 
