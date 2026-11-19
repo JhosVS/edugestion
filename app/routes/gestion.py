@@ -14,7 +14,9 @@ from ..db import get_db
 
 bp = Blueprint("gestion", __name__, url_prefix="/director/gestion")
 
-ROLES = {"alumno": "Alumno", "docente": "Docente", "director": "Director", "admin": "Administrador"}
+ROLES = {"alumno": "Alumno", "padre": "Padre", "docente": "Docente", "director": "Director",
+         "admin": "Administrador"}
+PARENTESCOS = ("Padre", "Madre", "Apoderado")
 HORA = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
@@ -53,6 +55,7 @@ def inicio():
     total = {
         "alumnos": conteo.get("alumno", 0),
         "docentes": conteo.get("docente", 0),
+        "padres": conteo.get("padre", 0),
         "secciones": db.execute("SELECT COUNT(*) FROM secciones").fetchone()[0],
         "cursos": db.execute("SELECT COUNT(*) FROM cursos").fetchone()[0],
         "sin_docente": db.execute(
@@ -72,7 +75,9 @@ def usuarios():
     rol = request.args.get("rol", "alumno")
     rol = rol if rol in roles else "alumno"
     lista = get_db().execute(
-        "SELECT u.id, u.nombres, u.apellidos, u.correo, u.activo, al.dni, s.grado, s.seccion "
+        "SELECT u.id, u.nombres, u.apellidos, u.correo, u.activo, al.dni, s.grado, s.seccion, "
+        " (SELECT GROUP_CONCAT(h.nombres || ' ' || h.apellidos, ', ') FROM apoderados ap "
+        "   JOIN usuarios h ON h.id = ap.alumno_id WHERE ap.padre_id = u.id) AS hijos "
         "FROM usuarios u LEFT JOIN alumnos al ON al.usuario_id = u.id "
         "LEFT JOIN secciones s ON s.id = al.seccion_id WHERE u.rol = ? "
         "ORDER BY u.activo DESC, s.grado, s.seccion, u.apellidos, u.nombres", (rol,)).fetchall()
@@ -148,13 +153,83 @@ def _form_usuario(actual=None):
                     if d["clave"]:
                         cambios.append("contraseña")
                     registrar("usuario", f"Editó {nombre}: {', '.join(cambios) or 'sin cambios'}")
+                if actual is None and d["rol"] == "padre":
+                    flash("Usuario guardado. Ahora vincula a sus hijos.", "ok")
+                    return redirect(url_for("gestion.usuario_editar", usuario_id=uid))
                 flash("Usuario guardado.", "ok")
                 return redirect(url_for("gestion.usuarios", rol=d["rol"]))
         for e in errores:
             flash(e, "error")
         datos = {**datos, **d}
     return render_template("gestion/usuario_form.html", u=datos, nuevo=actual is None,
-                           roles=_roles_visibles(), secciones=_secciones())
+                           roles=_roles_visibles(), secciones=_secciones(),
+                           parentescos=PARENTESCOS, **_vinculos(actual))
+
+
+def _vinculos(actual):
+    """Hijos de un padre (y alumnos que se le pueden vincular) o apoderados de un alumno."""
+    if actual is None or actual["rol"] not in ("padre", "alumno"):
+        return {}
+    db = get_db()
+    if actual["rol"] == "alumno":
+        return {"apoderados": db.execute(
+            "SELECT p.id, p.nombres, p.apellidos, ap.parentesco FROM apoderados ap "
+            "JOIN usuarios p ON p.id = ap.padre_id WHERE ap.alumno_id = ? ORDER BY p.apellidos",
+            (actual["id"],)).fetchall()}
+    hijos = db.execute(
+        "SELECT h.id, h.nombres, h.apellidos, h.activo, ap.parentesco, s.grado, s.seccion "
+        "FROM apoderados ap JOIN usuarios h ON h.id = ap.alumno_id "
+        "JOIN alumnos al ON al.usuario_id = h.id JOIN secciones s ON s.id = al.seccion_id "
+        "WHERE ap.padre_id = ? ORDER BY h.apellidos, h.nombres", (actual["id"],)).fetchall()
+    disponibles = db.execute(
+        "SELECT u.id, u.apellidos || ', ' || u.nombres AS nombre, al.dni, s.anio, s.grado, s.seccion "
+        "FROM alumnos al JOIN usuarios u ON u.id = al.usuario_id "
+        "JOIN secciones s ON s.id = al.seccion_id WHERE u.activo = 1 AND u.id NOT IN "
+        "(SELECT alumno_id FROM apoderados WHERE padre_id = ?) "
+        "ORDER BY s.anio DESC, s.grado, s.seccion, u.apellidos, u.nombres", (actual["id"],)).fetchall()
+    return {"hijos": hijos, "disponibles": disponibles}
+
+
+def _padre(usuario_id):
+    p = get_db().execute("SELECT id, nombres, apellidos FROM usuarios WHERE id = ? AND rol = 'padre'",
+                         (usuario_id,)).fetchone()
+    return p or abort(404)
+
+
+@bp.route("/usuarios/<int:usuario_id>/hijos", methods=["POST"])
+def hijo_vincular(usuario_id):
+    padre = _padre(usuario_id)
+    db = get_db()
+    alumno = db.execute(
+        "SELECT u.id, u.nombres, u.apellidos FROM alumnos al JOIN usuarios u ON u.id = al.usuario_id "
+        "WHERE al.usuario_id = ?", (request.form.get("alumno_id", type=int),)).fetchone()
+    parentesco = request.form.get("parentesco", "")
+    if alumno is None or parentesco not in PARENTESCOS:
+        flash("Elige al alumno y el parentesco.", "error")
+    else:
+        try:
+            db.execute("INSERT INTO apoderados(padre_id, alumno_id, parentesco) VALUES (?,?,?)",
+                       (padre["id"], alumno["id"], parentesco))
+            db.commit()
+        except sqlite3.IntegrityError:
+            flash("Ese alumno ya está vinculado a este padre.", "error")
+        else:
+            registrar("usuario", f'Vinculó a {alumno["nombres"]} {alumno["apellidos"]} con '
+                                 f'{padre["nombres"]} {padre["apellidos"]} ({parentesco.lower()})')
+            flash(f'{alumno["nombres"]} vinculado como hijo.', "ok")
+    return redirect(url_for("gestion.usuario_editar", usuario_id=padre["id"]))
+
+
+@bp.route("/usuarios/<int:usuario_id>/hijos/<int:alumno_id>/quitar", methods=["POST"])
+def hijo_quitar(usuario_id, alumno_id):
+    padre = _padre(usuario_id)
+    db = get_db()
+    if db.execute("DELETE FROM apoderados WHERE padre_id = ? AND alumno_id = ?",
+                  (padre["id"], alumno_id)).rowcount:
+        db.commit()
+        registrar("usuario", f'Desvinculó al alumno {alumno_id} de {padre["nombres"]} {padre["apellidos"]}')
+        flash("Vínculo eliminado.", "ok")
+    return redirect(url_for("gestion.usuario_editar", usuario_id=padre["id"]))
 
 
 @bp.route("/usuarios/nuevo", methods=["GET", "POST"])

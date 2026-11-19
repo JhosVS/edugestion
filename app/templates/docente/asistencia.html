@@ -10,6 +10,7 @@
     <form method="get" class="barra">
         <input type="date" name="fecha" value="{{ fecha }}" max="{{ hoy }}">
         <button class="btn btn--celeste btn--chico">Cambiar fecha</button>
+        <a class="btn btn--borde btn--chico" href="{{ url_for('reportes.asistencia', seccion=seccion.id) }}">Ver reporte de la sección</a>
     </form>
 </section>
 

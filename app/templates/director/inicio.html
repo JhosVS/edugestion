@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "_graficos.html" import grafico_asistencia, barras_niveles, asistencia_secciones %}
 {% block titulo %}Inicio · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
@@ -19,6 +20,13 @@
     <article class="stat stat--rojo"><span class="stat__valor">{{ resumen.avance }}%</span><span
             class="stat__etiqueta">Notas registradas (B{{ bimestre }})</span></article>
 </section>
+
+<div class="graficos">
+    {{ grafico_asistencia(datos.meses, "Asistencia institucional por mes") }}
+    {{ asistencia_secciones(por_seccion) }}
+    {{ barras_niveles(datos.bimestres, "Calificativos por bimestre", "Toda la institución") }}
+    {{ barras_niveles(datos.cursos, "Logro por área", "Bimestre " ~ datos.ultimo ~ " (último con notas)" if datos.ultimo else "") }}
+</div>
 
 <section class="tarjeta">
     <h2>Avance del registro de notas</h2>

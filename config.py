@@ -30,6 +30,7 @@ class Config:
         ("Director", "director@edugestion.test", "director123"),
         ("Docente", "docente@edugestion.test", "docente123"),
         ("Alumno", "alumno@edugestion.test", "alumno123"),
+        ("Padre de familia", "padre@edugestion.test", "padre123"),
     ]
 
     # Seguridad del inicio de sesión: tras INTENTOS_MAXIMOS fallos en BLOQUEO_MINUTOS,

@@ -4,7 +4,7 @@
 {% block contenido %}
 <main class="login">
   <section class="tarjeta login__caja">
-    <h1 class="marca"><img src="{{ url_for('static', filename='img/icon.svg') }}" alt="">Edu<span>Gestión</span></h1>
+    <h1 class="marca"><img src="{{ url_for('static', filename='img/icon.svg') }}" alt="" width="44" height="44">Edu<span>Gestión</span></h1>
     <p class="suave">{{ ajustes.institucion }} · {{ ajustes.lugar }}</p>
 
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}

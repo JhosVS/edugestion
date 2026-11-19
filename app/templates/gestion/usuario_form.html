@@ -68,5 +68,58 @@
         <a class="btn btn--borde" href="{{ url_for('gestion.usuarios', rol=u.rol) }}">Cancelar</a>
     </div>
 </form>
+
+{% if hijos is defined %}
+<section class="tarjeta">
+    <h2>Hijos vinculados</h2>
+    <p class="suave">El padre verá la libreta, la asistencia, el horario y la agenda de cada hijo.</p>
+    <ul class="lista">
+        {% for h in hijos %}
+        <li>
+            <span>{{ h.apellidos }}, {{ h.nombres }} <span class="suave">· {{ h.grado }} "{{ h.seccion }}" · {{
+                    h.parentesco }}</span>{% if not h.activo %} <span class="chip chip--F">Inactivo</span>{% endif
+                %}</span>
+            <form method="post" class="en-linea"
+                action="{{ url_for('gestion.hijo_quitar', usuario_id=u.id, alumno_id=h.id) }}"
+                onsubmit="return confirm('¿Quitar este vínculo?')">{{ csrf_campo() }}
+                <button class="btn btn--rojo btn--mini">Quitar</button>
+            </form>
+        </li>
+        {% else %}
+        <li class="suave">Aún no tiene hijos vinculados.</li>
+        {% endfor %}
+    </ul>
+    {% if disponibles %}
+    <form method="post" class="barra" action="{{ url_for('gestion.hijo_vincular', usuario_id=u.id) }}"
+        style="margin-top: .8rem">{{ csrf_campo() }}
+        <select name="alumno_id" required aria-label="Alumno">
+            <option value="">— Elige al alumno —</option>
+            {% for a in disponibles %}
+            <option value="{{ a.id }}">{{ a.grado }} "{{ a.seccion }}" · {{ a.nombre }}{% if a.dni %} · DNI {{ a.dni
+                }}{% endif %}</option>
+            {% endfor %}
+        </select>
+        <select name="parentesco" aria-label="Parentesco">
+            {% for p in parentescos %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+        </select>
+        <button class="btn btn--verde btn--chico">Vincular</button>
+    </form>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if apoderados is defined %}
+<section class="tarjeta">
+    <h2>Padres o apoderados</h2>
+    <ul class="lista">
+        {% for p in apoderados %}
+        <li><a href="{{ url_for('gestion.usuario_editar', usuario_id=p.id) }}">{{ p.apellidos }}, {{ p.nombres
+                }}</a><span class="suave">{{ p.parentesco }}</span></li>
+        {% else %}
+        <li class="suave">Sin padres vinculados. Se vinculan desde la ficha del padre.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
 <script src="{{ url_for('static', filename='js/usuario.js') }}"></script>
 {% endblock %}

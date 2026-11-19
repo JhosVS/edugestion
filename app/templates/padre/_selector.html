@@ -1,0 +1,9 @@
+{# Pestañas para cambiar de hijo (solo si el padre tiene más de uno). #}
+{% if hijos|length > 1 %}
+<nav class="pestanas" aria-label="Elegir hijo">
+    {% for h in hijos %}
+    <a class="{% if h.id == hijo.id %}activo{% endif %}" href="{{ url_for(request.endpoint, hijo=h.id) }}">{{
+        h.nombres }} · {{ h.grado }} "{{ h.seccion }}"</a>
+    {% endfor %}
+</nav>
+{% endif %}

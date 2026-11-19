@@ -2,6 +2,7 @@ from datetime import date
 
 from flask import Blueprint, abort, render_template, request, send_file
 
+from .. import estadisticas
 from ..ajustes import bimestre_actual
 from ..auth import login_required
 from ..consultas import avance_notas
@@ -51,7 +52,8 @@ def inicio():
         "avance": round(100 * registrados / esperados) if esperados else 0,
     }
     return render_template("director/inicio.html", resumen=resumen, avance=avance,
-                           bimestre=bimestre)
+                           bimestre=bimestre, datos=estadisticas.panel(),
+                           por_seccion=estadisticas.asistencia_por_seccion())
 
 
 @bp.route("/asistencia")

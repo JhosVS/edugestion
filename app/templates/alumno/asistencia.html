@@ -2,9 +2,13 @@
 {% block titulo %}Asistencia · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
-    <h1>Mi asistencia</h1>
+    <h1>{% if hijo %}Asistencia de {{ hijo.nombres }}{% else %}Mi asistencia{% endif %}</h1>
     <p class="suave">Resumen general y últimos registros</p>
+    <div class="acciones">
+        <a class="btn btn--verde btn--chico" href="{{ url_for('reportes.asistencia', hijo=hijo.id if hijo else none) }}">Ver reporte completo (tabla, Excel e impresión)</a>
+    </div>
 </div>
+{% if hijos %}{% include "padre/_selector.html" %}{% endif %}
 
 <section class="grid-stats">
     <article class="stat stat--verde">

@@ -13,6 +13,7 @@ bp = Blueprint("auth", __name__)
 
 INICIO_POR_ROL = {
     "alumno": "alumno.inicio",
+    "padre": "padre.inicio",
     "docente": "docente.inicio",
     "director": "director.inicio",
     "admin": "admin.inicio",
