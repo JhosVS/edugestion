@@ -2,15 +2,26 @@
 {% from "_iconos.html" import icono %}
 
 {% block contenido %}
-<aside class="sidebar">
+{% set iniciales = (g.usuario.nombres[:1] ~ g.usuario.apellidos[:1])|upper %}
+<aside class="sidebar" id="sidebar">
     <a class="sidebar__marca" href="{{ url_for('auth.raiz') }}">
-        <img src="{{ url_for('static', filename='img/icon.svg') }}" alt="" width="36" height="36">
+        <img src="{{ url_for('static', filename='img/logo-icono.webp') }}" alt="" width="36" height="36">
         <span>Edu<span>Gestión</span></span>
     </a>
+
+    <a class="sidebar__usuario" href="{{ url_for('auth.cuenta') }}" title="Mi cuenta">
+        <span class="avatar" aria-hidden="true">{{ iniciales }}</span>
+        <span class="sidebar__usuario-texto">
+            <strong>{{ g.usuario.nombres }} {{ g.usuario.apellidos }}</strong>
+            <small><i class="en-linea-punto"></i>{{ nombre_rol[g.usuario.rol] }}</small>
+        </span>
+    </a>
+
+    <p class="sidebar__titulo">Navegación</p>
     <nav class="nav" aria-label="Menú principal">
         {% for endpoint, texto, ico in menu %}
-        <a class="nav__item {% if menu_activo(endpoint) %}activo{% endif %}"
-            href="{{ url_for(endpoint) }}">{{
+        <a class="nav__item {% if menu_activo(endpoint) %}activo{% endif %}" href="{{ url_for(endpoint) }}"
+            title="{{ texto }}" {% if menu_activo(endpoint) %}aria-current="page" {% endif %}>{{
             icono(ico) }}<span>{{ texto }}</span></a>
         {% endfor %}
     </nav>
@@ -18,14 +29,25 @@
 
 <div class="contenido">
     <header class="topbar">
+        <button type="button" class="topbar__boton" id="alternar-menu" aria-controls="sidebar"
+            aria-label="Mostrar u ocultar el menú">{{ icono("menu") }}</button>
         <div class="topbar__marca">
-            <img src="{{ url_for('static', filename='img/icon.svg') }}" alt="" width="36" height="36">
+            <img src="{{ url_for('static', filename='img/logo-icono.webp') }}" alt="" width="32" height="32">
             <strong>Edu<span>Gestión</span></strong>
+        </div>
+        <div class="topbar__contexto">
+            <strong>{{ ajustes.institucion }}</strong>
+            <span class="suave">{{ ajustes.lugar }}</span>
+            <span class="topbar__periodo">Año {{ ajustes.anio_lectivo }} · Bimestre {{ ajustes.bimestre_actual
+                }}</span>
         </div>
         <div class="topbar__usuario">
             <a class="usuario-chip" href="{{ url_for('auth.cuenta') }}" title="Mi cuenta">
-                <strong>{{ g.usuario.nombres }} {{ g.usuario.apellidos }}</strong>
-                <small>{{ nombre_rol[g.usuario.rol] }}</small>
+                <span class="avatar avatar--chico" aria-hidden="true">{{ iniciales }}</span>
+                <span class="usuario-chip__texto">
+                    <strong>{{ g.usuario.nombres }} {{ g.usuario.apellidos }}</strong>
+                    <small>{{ nombre_rol[g.usuario.rol] }}</small>
+                </span>
             </a>
             <a class="btn btn--rojo btn--chico btn--salir" href="{{ url_for('auth.logout') }}">
                 {{ icono("salir") }}<span>Salir</span>
@@ -40,4 +62,5 @@
         {% block pagina %}{% endblock %}
     </main>
 </div>
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 {% endblock %}

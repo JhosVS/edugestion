@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "_graficos.html" import grafico_asistencia, barras_niveles %}
+{% from "_iconos.html" import icono %}
 {% block titulo %}Inicio · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
@@ -16,14 +17,14 @@
     </div>
 
     <div class="grid-stats" style="margin-top: .8rem">
-        <article class="stat stat--verde">
+        <article class="stat stat--verde"><span class="stat__icono">{{ icono("asistencia") }}</span>
             <span class="stat__valor">{% if r.asistencia.pct is not none %}{{ r.asistencia.pct }}%{% else %}—{% endif
                 %}</span>
             <span class="stat__etiqueta">Asistencia</span>
         </article>
-        <article class="stat stat--naranja"><span class="stat__valor">{{ r.asistencia.T }}</span><span
+        <article class="stat stat--naranja"><span class="stat__icono">{{ icono("reloj") }}</span><span class="stat__valor">{{ r.asistencia.T }}</span><span
                 class="stat__etiqueta">Tardanzas</span></article>
-        <article class="stat stat--rojo"><span class="stat__valor">{{ r.asistencia.F }}</span><span
+        <article class="stat stat--rojo"><span class="stat__icono">{{ icono("falta") }}</span><span class="stat__valor">{{ r.asistencia.F }}</span><span
                 class="stat__etiqueta">Faltas</span></article>
     </div>
 
