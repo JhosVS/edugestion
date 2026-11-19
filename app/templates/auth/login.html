@@ -4,9 +4,12 @@
 {% block contenido %}
 <main class="login">
   <section class="tarjeta login__caja">
-    <h1 class="marca"><img src="{{ url_for('static', filename='img/icon.svg') }}" alt="" width="44" height="44">Edu<span>Gestión</span></h1>
-    <p class="suave">{{ ajustes.institucion }} · {{ ajustes.lugar }}</p>
-
+    <div class="login__cabecera">
+      <h1 class="marca"><img class="marca__logo" src="{{ url_for('static', filename='img/logo.webp') }}" alt="EduGestión" width="440" height="128"></h1>
+      <p><strong>{{ ajustes.institucion }}</strong> <span class="suave">· {{ ajustes.lugar }}</span></p>
+      <p class="suave"><small>Ingresa con tu correo institucional</small></p>
+    </div>
+    <div class="login__cuerpo">
     {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
     <div class="aviso aviso--{{ categoria }}">{{ mensaje }}</div>
     {% endfor %}
@@ -20,6 +23,7 @@
 
       <button class="btn btn--naranja btn--ancho" type="submit">Ingresar</button>
     </form>
+    </div>
   </section>
 
   {% if credenciales %}

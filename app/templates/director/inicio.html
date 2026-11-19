@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "_graficos.html" import grafico_asistencia, barras_niveles, asistencia_secciones %}
+{% from "_iconos.html" import icono %}
 {% block titulo %}Inicio · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
@@ -8,22 +9,28 @@
 </div>
 
 <section class="grid-stats">
-    <article class="stat"><span class="stat__valor">{{ resumen.alumnos }}</span><span
-            class="stat__etiqueta">Alumnos</span></article>
-    <article class="stat stat--naranja"><span class="stat__valor">{{ resumen.docentes }}</span><span
-            class="stat__etiqueta">Docentes</span></article>
-    <article class="stat stat--verde">
+    <article class="stat"><span class="stat__icono">{{ icono("alumno") }}</span><span class="stat__valor">{{
+            resumen.alumnos }}</span><span class="stat__etiqueta">Alumnos</span></article>
+    <article class="stat"><span class="stat__icono">{{ icono("docente") }}</span><span class="stat__valor">{{
+            resumen.docentes }}</span><span class="stat__etiqueta">Docentes</span></article>
+    <article class="stat stat--verde"><span class="stat__icono">{{ icono("asistencia") }}</span>
         <span class="stat__valor">{% if resumen.asistencia is not none %}{{ resumen.asistencia }}%{% else %}—{% endif
             %}</span>
         <span class="stat__etiqueta">Asistencia general</span>
     </article>
-    <article class="stat stat--rojo"><span class="stat__valor">{{ resumen.avance }}%</span><span
-            class="stat__etiqueta">Notas registradas (B{{ bimestre }})</span></article>
+    <article class="stat stat--naranja"><span class="stat__icono">{{ icono("libreta") }}</span><span
+            class="stat__valor">{{ resumen.avance }}%</span><span class="stat__etiqueta">Notas registradas (B{{
+            bimestre }})</span></article>
 </section>
 
+<h2 class="grupo-titulo">Asistencia</h2>
 <div class="graficos">
     {{ grafico_asistencia(datos.meses, "Asistencia institucional por mes") }}
     {{ asistencia_secciones(por_seccion) }}
+</div>
+
+<h2 class="grupo-titulo">Notas</h2>
+<div class="graficos">
     {{ barras_niveles(datos.bimestres, "Calificativos por bimestre", "Toda la institución") }}
     {{ barras_niveles(datos.cursos, "Logro por área", "Bimestre " ~ datos.ultimo ~ " (último con notas)" if datos.ultimo else "") }}
 </div>

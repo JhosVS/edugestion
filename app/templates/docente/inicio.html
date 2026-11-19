@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% from "_horario.html" import horario_semanal %}
 {% from "_graficos.html" import panel %}
+{% from "_iconos.html" import icono %}
 {% block titulo %}Inicio · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
@@ -9,13 +10,13 @@
 </div>
 
 <section class="grid-stats">
-    <article class="stat stat--naranja"><span class="stat__valor">{{ cursos|length }}</span><span
-            class="stat__etiqueta">Cursos asignados</span></article>
-    <article class="stat stat--verde"><span class="stat__valor">{{ n_secciones }}</span><span
-            class="stat__etiqueta">Secciones</span></article>
+    <article class="stat"><span class="stat__icono">{{ icono("cursos") }}</span><span class="stat__valor">{{
+            cursos|length }}</span><span class="stat__etiqueta">Cursos asignados</span></article>
+    <article class="stat"><span class="stat__icono">{{ icono("gestion") }}</span><span class="stat__valor">{{
+            n_secciones }}</span><span class="stat__etiqueta">Secciones</span></article>
 </section>
 
-<h2 class="subtitulo">Mis secciones en el año</h2>
+<h2 class="grupo-titulo">Mis secciones en el año</h2>
 {{ panel(datos, "Logro por curso y sección", por_seccion) }}
 
 <section class="tarjeta">

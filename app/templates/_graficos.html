@@ -1,6 +1,7 @@
 {# Gráficos de asistencia y notas. Uso: {% from "_graficos.html" import panel %} {{ panel(datos) }}
    Cada gráfico trae su tabla de datos ("Ver datos") y tooltips al pasar el mouse o con el teclado. #}
 
+{% from "_iconos.html" import icono %}
 {% set NOMBRE_NIVEL = {"AD": "Logro destacado", "A": "Logro esperado", "B": "En proceso", "C": "En inicio"} %}
 
 {# ------------------------------------------------------------------ asistencia #}
@@ -55,15 +56,15 @@
 
 {% macro resumen_asistencia(a) -%}
 <section class="grid-stats">
-    <article class="stat stat--verde">
+    <article class="stat stat--verde"><span class="stat__icono">{{ icono("asistencia") }}</span>
         <span class="stat__valor">{% if a.pct is not none %}{{ a.pct }}%{% else %}—{% endif %}</span>
         <span class="stat__etiqueta">Asistencia del año</span>
     </article>
-    <article class="stat"><span class="stat__valor">{{ "{:,}".format(a.p) }}</span><span
+    <article class="stat"><span class="stat__icono">{{ icono("presente") }}</span><span class="stat__valor">{{ "{:,}".format(a.p) }}</span><span
             class="stat__etiqueta">Presentes</span></article>
-    <article class="stat stat--naranja"><span class="stat__valor">{{ "{:,}".format(a.t) }}</span><span
+    <article class="stat stat--naranja"><span class="stat__icono">{{ icono("reloj") }}</span><span class="stat__valor">{{ "{:,}".format(a.t) }}</span><span
             class="stat__etiqueta">Tardanzas</span></article>
-    <article class="stat stat--rojo"><span class="stat__valor">{{ "{:,}".format(a.f) }}</span><span
+    <article class="stat stat--rojo"><span class="stat__icono">{{ icono("falta") }}</span><span class="stat__valor">{{ "{:,}".format(a.f) }}</span><span
             class="stat__etiqueta">Faltas</span></article>
 </section>
 {%- endmacro %}
