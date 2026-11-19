@@ -1,0 +1,204 @@
+{% extends "layout.html" %}
+{% block titulo %}Reporte de asistencia · EduGestión{% endblock %}
+{% set NOMBRE = {"P": "Presente", "T": "Tardanza", "F": "Falta"} %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>Reporte de asistencia</h1>
+    {% if seccion %}
+    <p class="suave">
+        {% if hijo %}{{ hijo.nombres }} {{ hijo.apellidos }} · {% elif individual %}{{ g.usuario.nombres }} {{
+        g.usuario.apellidos }} · {% endif %}{{ seccion.grado }} "{{ seccion.seccion }}" · {{ seccion.anio }}
+        {% if datos.desde %} · del {{ datos.desde|fecha_corta }} al {{ datos.hasta|fecha_corta }}{% endif %}
+    </p>
+    {% endif %}
+</div>
+{% if hijos %}{% include "padre/_selector.html" %}{% endif %}
+
+{% if not seccion %}
+<section class="tarjeta">
+    <p class="suave">{% if hijos is not none %}Aún no tienes hijos vinculados.{% else %}No tienes secciones
+        asignadas.{% endif %}</p>
+</section>
+{% else %}
+
+{# ---------------------------------------------------------------- filtros #}
+<section class="tarjeta no-imprimir">
+    <form method="get" class="barra">
+        {% if secciones %}
+        <label>Sección
+            <select name="seccion">
+                {% for s in secciones %}
+                <option value="{{ s.id }}" {% if s.id == seccion.id %}selected{% endif %}>{{ s.grado }} "{{
+                    s.seccion }}" · {{ s.anio }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% endif %}
+        {% if hijo %}<input type="hidden" name="hijo" value="{{ hijo.id }}">{% endif %}
+        <label>Desde <input type="date" name="desde" value="{{ datos.desde if filtrado else '' }}"
+                min="{{ datos.inicio or '' }}" max="{{ datos.fin or '' }}"></label>
+        <label>Hasta <input type="date" name="hasta" value="{{ datos.hasta if filtrado else '' }}"
+                min="{{ datos.inicio or '' }}" max="{{ datos.fin or '' }}"></label>
+        <button class="btn btn--celeste btn--chico">Ver reporte</button>
+    </form>
+    {% set base = {"seccion": seccion.id if secciones else none, "hijo": hijo.id if hijo else none} %}
+    {% if meses %}
+    <nav class="pestanas" aria-label="Período" style="margin-top: .8rem">
+        <a class="{% if not filtrado %}activo{% endif %}"
+            href="{{ url_for('reportes.asistencia', **base) }}">Todo el año</a>
+        {% for m in meses %}
+        <a class="{% if filtrado and datos.desde >= m.desde and datos.hasta <= m.hasta %}activo{% endif %}"
+            href="{{ url_for('reportes.asistencia', desde=m.desde, hasta=m.hasta, **base) }}">{{ m.nombre }}</a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+    <div class="acciones">
+        <a class="btn btn--verde btn--chico" href="{{ url_for('reportes.asistencia_excel', desde=datos.desde if filtrado else none,
+            hasta=datos.hasta if filtrado else none, **base) }}">Descargar Excel</a>
+        <button type="button" class="btn btn--borde btn--chico" onclick="window.print()">Imprimir</button>
+    </div>
+</section>
+
+{# ---------------------------------------------------------------- resumen #}
+<section class="grid-stats">
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if datos.totales.pct is not none %}{{ datos.totales.pct }}%{% else %}—{% endif
+            %}</span>
+        <span class="stat__etiqueta">Asistencia</span>
+    </article>
+    <article class="stat"><span class="stat__valor">{{ datos.dias|length }}</span><span class="stat__etiqueta">Días de
+            clase</span></article>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ datos.totales.T }}</span><span
+            class="stat__etiqueta">Tardanzas</span></article>
+    <article class="stat stat--rojo"><span class="stat__valor">{{ datos.totales.F }}</span><span
+            class="stat__etiqueta">Faltas</span></article>
+</section>
+
+{% macro tabla_seccion(datos) -%}
+{% set dias = datos.dias %}
+<div class="tabla-scroll">
+    <table class="asistencia-tabla">
+        <thead>
+            <tr>
+                <th class="fijo fijo--n" rowspan="2" scope="col">N.°</th>
+                <th class="fijo fijo--nombre" rowspan="2" scope="col">Apellidos y nombres</th>
+                {% for m in datos.meses %}<th class="mes inicio-mes" colspan="{{ m.dias }}" scope="colgroup">{{ m.nombre }}</th>{% endfor %}
+                <th class="total" rowspan="2" scope="col">P</th>
+                <th class="total" rowspan="2" scope="col">T</th>
+                <th class="total" rowspan="2" scope="col">F</th>
+                <th class="total" rowspan="2" scope="col">%</th>
+            </tr>
+            <tr>
+                {% for d in dias %}<th class="dia{% if loop.first or d.mes != dias[loop.index0 - 1].mes %} inicio-mes{% endif %}" scope="col" title="{{ d.fecha|fecha_corta }}"><small>{{ d.inicial }}</small>{{ d.dia }}</th>{% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in datos.filas %}
+            <tr>
+                <td class="fijo fijo--n">{{ loop.index }}</td>
+                <th class="fijo fijo--nombre" scope="row">{{ a.nombre }}</th>
+                {% for e in a.estados %}{% set d = dias[loop.index0] %}<td{% if loop.first or d.mes != dias[loop.index0 - 1].mes %} class="inicio-mes"{% endif %}{% if e != "P" %} title="{{ d.fecha|fecha_corta }}: {{ NOMBRE[e] if e else 'sin registro' }}"{% endif %}><i class="ra ra--{{ e or 'vacio' }}">{{ e or "·" }}</i></td>{% endfor %}
+                <td class="total">{{ a.P }}</td>
+                <td class="total">{{ a.T }}</td>
+                <td class="total{% if a.F %} total--falta{% endif %}">{{ a.F }}</td>
+                <td class="total"><strong>{{ a.pct if a.pct is not none else "—" }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td class="fijo fijo--n"></td>
+                <th class="fijo fijo--nombre" scope="row">Asistieron</th>
+                {% for d in dias %}<td>{{ d.asistieron }}</td>{% endfor %}
+                <td class="total" colspan="4"></td>
+            </tr>
+            <tr>
+                <td class="fijo fijo--n"></td>
+                <th class="fijo fijo--nombre" scope="row">Faltaron</th>
+                {% for d in dias %}<td>{{ d.faltaron or "" }}</td>{% endfor %}
+                <td class="total" colspan="4"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{%- endmacro %}
+
+{% macro leyenda() -%}
+<p class="leyenda-asistencia">
+    <span><i class="ra ra--P">P</i> Presente</span>
+    <span><i class="ra ra--T">T</i> Tardanza</span>
+    <span><i class="ra ra--F">F</i> Falta</span>
+    <span><i class="ra ra--vacio">·</i> Sin registro</span>
+    {% if individual %}<span><i class="ra ra--finde"></i> Sin clases</span>{% endif %}
+    <small class="suave">Las tardanzas cuentan como asistencia.</small>
+</p>
+{%- endmacro %}
+
+<section class="tarjeta reporte">
+    {% if not datos.dias %}
+    <p class="suave">No hay asistencia registrada en este período.</p>
+
+    {% elif individual %}
+    {# ------------------------------------------------ un alumno: mes x día #}
+    <h2>Asistencia por día</h2>
+    {{ leyenda() }}
+    <div class="tabla-scroll">
+        <table class="asistencia-tabla asistencia-tabla--calendario">
+            <thead>
+                <tr>
+                    <th class="fijo" scope="col">Mes</th>
+                    {% for d in range(1, 32) %}<th scope="col">{{ d }}</th>{% endfor %}
+                    <th class="total" scope="col">P</th>
+                    <th class="total" scope="col">T</th>
+                    <th class="total" scope="col">F</th>
+                    <th class="total" scope="col">%</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in calendario %}
+                <tr>
+                    <th class="fijo" scope="row">{{ m.nombre }}</th>
+                    {% for c in m.celdas %}
+                    {% if c.tipo == "nohay" %}<td class="ra-nohay"></td>
+                    {% elif c.tipo != "clase" %}<td class="ra-finde" title="{{ c.fecha|fecha_corta }}: sin clases"></td>
+                    {% elif c.estado %}<td title="{{ c.fecha|fecha_corta }}: {{ NOMBRE[c.estado] }}"><i
+                            class="ra ra--{{ c.estado }}">{{ c.estado }}</i></td>
+                    {% else %}<td title="{{ c.fecha|fecha_corta }}: sin registro"><i class="ra ra--vacio">·</i></td>
+                    {% endif %}
+                    {% endfor %}
+                    <td class="total">{{ m.P }}</td>
+                    <td class="total">{{ m.T }}</td>
+                    <td class="total">{{ m.F }}</td>
+                    <td class="total"><strong>{{ m.pct if m.pct is not none else "—" }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                {% set a = datos.filas[0] %}
+                <tr>
+                    <th class="fijo" scope="row">Total</th>
+                    <td colspan="31"></td>
+                    <td class="total">{{ a.P }}</td>
+                    <td class="total">{{ a.T }}</td>
+                    <td class="total">{{ a.F }}</td>
+                    <td class="total"><strong>{{ a.pct }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    {% else %}
+    {# ------------------------------------------------ sección: alumno x día #}
+    <h2>Registro de asistencia de la sección</h2>
+    {{ leyenda() }}
+    <div class="{% if impresion %}solo-pantalla{% endif %}">{{ tabla_seccion(datos) }}</div>
+    {% for bloque in impresion %}
+    <div class="solo-imprimir hoja">
+        <h3>{{ bloque.meses[0].nombre }} · {{ seccion.grado }} "{{ seccion.seccion }}" · {{ seccion.anio }}</h3>
+        {{ tabla_seccion(bloque) }}
+    </div>
+    {% endfor %}
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

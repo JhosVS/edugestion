@@ -2,6 +2,7 @@ from datetime import date
 
 from flask import Blueprint, g, render_template
 
+from .. import estadisticas, estudiante
 from ..auth import login_required
 from ..consultas import DIAS_SEMANA, horario
 from ..db import get_db
@@ -9,100 +10,47 @@ from ..db import get_db
 bp = Blueprint("alumno", __name__, url_prefix="/alumno")
 
 
-def _perfil():
-    return get_db().execute(
-        "SELECT s.id AS seccion_id, s.anio, s.grado, s.seccion "
-        "FROM alumnos a JOIN secciones s ON s.id = a.seccion_id "
-        "WHERE a.usuario_id = ?", (g.usuario["id"],)).fetchone()
-
-
-def _resumen_asistencia(alumno_id):
-    filas = get_db().execute(
-        "SELECT estado, COUNT(*) AS n FROM asistencias WHERE alumno_id = ? GROUP BY estado",
-        (alumno_id,)).fetchall()
-    c = {"P": 0, "T": 0, "F": 0}
-    c.update({f["estado"]: f["n"] for f in filas})
-    total = sum(c.values())
-    # Una tardanza cuenta como asistencia (el alumno vino, pero tarde).
-    pct = round(100 * (c["P"] + c["T"]) / total) if total else None
-    return {**c, "total": total, "pct": pct}
-
-
 @bp.route("/")
 @login_required("alumno")
 def inicio():
-    db = get_db()
-    filas = db.execute(
-        "SELECT calificativo, COUNT(*) AS n FROM calificaciones "
-        "WHERE alumno_id = ? GROUP BY calificativo", (g.usuario["id"],)).fetchall()
-    conteo = {"AD": 0, "A": 0, "B": 0, "C": 0}
-    conteo.update({f["calificativo"]: f["n"] for f in filas})
-    return render_template("alumno/inicio.html", perfil=_perfil(),
-                           asistencia=_resumen_asistencia(g.usuario["id"]),
-                           conteo=conteo)
+    uid = g.usuario["id"]
+    perfil = estudiante.perfil(uid)
+    return render_template("alumno/inicio.html", perfil=perfil,
+                           asistencia=estudiante.resumen_asistencia(uid),
+                           conteo=estudiante.conteo_calificativos(uid),
+                           proximas=estudiante.agenda(perfil["seccion_id"], limite=3),
+                           datos=estadisticas.panel(alumno_id=uid))
 
 
 @bp.route("/cursos")
 @login_required("alumno")
 def cursos():
-    db = get_db()
-    perfil = _perfil()
-    lista = db.execute(
-        "SELECT c.nombre AS curso, u.nombres || ' ' || u.apellidos AS docente, "
-        " (SELECT GROUP_CONCAT(co.nombre, '|') FROM competencias co "
-        "   WHERE co.curso_id = c.id) AS competencias "
-        "FROM asignaciones a JOIN cursos c ON c.id = a.curso_id "
-        "JOIN usuarios u ON u.id = a.docente_id WHERE a.seccion_id = ? ORDER BY c.nombre",
-        (perfil["seccion_id"],)).fetchall()
-    return render_template("alumno/cursos.html", perfil=perfil, cursos=lista,
-                           bloques=horario(db, seccion_id=perfil["seccion_id"]), dias=DIAS_SEMANA)
+    perfil = estudiante.perfil(g.usuario["id"])
+    return render_template("alumno/cursos.html", perfil=perfil,
+                           cursos=estudiante.cursos(perfil["seccion_id"]),
+                           bloques=horario(get_db(), seccion_id=perfil["seccion_id"]),
+                           dias=DIAS_SEMANA)
 
 
 @bp.route("/libreta")
 @login_required("alumno")
 def libreta():
-    db = get_db()
-    perfil = _perfil()
-    filas = db.execute(
-        "SELECT c.id AS curso_id, c.nombre AS curso, "
-        "       u.nombres || ' ' || u.apellidos AS docente, "
-        "       co.id AS comp_id, co.nombre AS competencia "
-        "FROM asignaciones a "
-        "JOIN cursos c ON c.id = a.curso_id "
-        "JOIN usuarios u ON u.id = a.docente_id "
-        "JOIN competencias co ON co.curso_id = c.id "
-        "WHERE a.seccion_id = ? ORDER BY c.nombre, co.id", (perfil["seccion_id"],)).fetchall()
-
-    notas = {}
-    for n in db.execute("SELECT competencia_id, bimestre, calificativo FROM calificaciones "
-                        "WHERE alumno_id = ?", (g.usuario["id"],)):
-        notas.setdefault(n["competencia_id"], {})[n["bimestre"]] = n["calificativo"]
-
-    cursos = {}
-    for f in filas:
-        curso = cursos.setdefault(f["curso_id"], {
-            "nombre": f["curso"], "docente": f["docente"], "competencias": []})
-        curso["competencias"].append({
-            "nombre": f["competencia"], "notas": notas.get(f["comp_id"], {})})
-
-    return render_template("alumno/libreta.html", perfil=perfil, cursos=list(cursos.values()))
+    perfil = estudiante.perfil(g.usuario["id"])
+    return render_template("alumno/libreta.html", perfil=perfil,
+                           cursos=estudiante.libreta(perfil["id"], perfil["seccion_id"]))
 
 
 @bp.route("/asistencia")
 @login_required("alumno")
 def asistencia():
-    registros = get_db().execute(
-        "SELECT fecha, estado FROM asistencias WHERE alumno_id = ? "
-        "ORDER BY fecha DESC LIMIT 30", (g.usuario["id"],)).fetchall()
-    return render_template("alumno/asistencia.html",
-                           resumen=_resumen_asistencia(g.usuario["id"]), registros=registros)
+    uid = g.usuario["id"]
+    return render_template("alumno/asistencia.html", resumen=estudiante.resumen_asistencia(uid),
+                           registros=estudiante.ultimas_asistencias(uid))
+
 
 @bp.route("/agenda")
 @login_required("alumno")
 def agenda():
-    entradas = get_db().execute(
-        "SELECT ag.titulo, ag.descripcion, ag.fecha, u.nombres || ' ' || u.apellidos AS docente "
-        "FROM agenda ag LEFT JOIN usuarios u ON u.id = ag.creado_por "
-        "WHERE ag.seccion_id = ? AND ag.fecha >= ? ORDER BY ag.fecha",
-        (_perfil()["seccion_id"], date.today().isoformat())).fetchall()
-    return render_template("alumno/agenda.html", entradas=entradas, hoy=date.today().isoformat())
+    perfil = estudiante.perfil(g.usuario["id"])
+    return render_template("alumno/agenda.html", entradas=estudiante.agenda(perfil["seccion_id"]),
+                           hoy=date.today().isoformat())

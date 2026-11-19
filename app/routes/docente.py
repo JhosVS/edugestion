@@ -3,6 +3,7 @@ from datetime import date
 from flask import (Blueprint, abort, flash, g, redirect, render_template, request, send_file,
                    url_for)
 
+from .. import estadisticas
 from ..ajustes import bimestre_actual
 from ..auditoria import registrar
 from ..auth import login_required
@@ -64,8 +65,13 @@ def inicio():
     bimestre = _bimestre()
     db = get_db()
     cursos = avance_notas(db, bimestre, g.usuario["id"])
+    secciones = sorted({c["seccion_id"] for c in cursos})
     return render_template("docente/inicio.html", cursos=cursos, bimestre=bimestre,
-                           n_secciones=len({c["seccion_id"] for c in cursos}),
+                           n_secciones=len(secciones),
+                           datos=estadisticas.panel(seccion_ids=secciones, docente_id=g.usuario["id"],
+                                                    por_seccion=len(secciones) > 1),
+                           por_seccion=estadisticas.asistencia_por_seccion(secciones)
+                           if len(secciones) > 1 else None,
                            bloques=horario(db, docente_id=g.usuario["id"]), dias=DIAS_SEMANA)
 
 

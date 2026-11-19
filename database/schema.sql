@@ -1,7 +1,7 @@
 PRAGMA foreign_keys = ON;
 
 -- ============================================================
---  USUARIOS (alumnos, docentes, director y administrador comparten esta tabla)
+--  USUARIOS (alumnos, padres, docentes, director y administrador comparten esta tabla)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS usuarios (
     id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     apellidos      TEXT NOT NULL,
     correo         TEXT NOT NULL UNIQUE COLLATE NOCASE,
     clave_hash     TEXT NOT NULL,
-    rol            TEXT NOT NULL CHECK (rol IN ('alumno', 'docente', 'director', 'admin')),
+    rol            TEXT NOT NULL CHECK (rol IN ('alumno', 'padre', 'docente', 'director', 'admin')),
     activo         INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),
     creado_en      TEXT NOT NULL DEFAULT (datetime('now')),
     ultimo_acceso  TEXT                                   -- hora de Perú, AAAA-MM-DD HH:MM:SS
@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS alumnos (
     usuario_id  INTEGER PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
     seccion_id  INTEGER NOT NULL REFERENCES secciones(id),
     dni         TEXT
+);
+
+-- Padres o apoderados de cada alumno. Un padre puede tener varios hijos
+-- y un alumno varios apoderados.
+CREATE TABLE IF NOT EXISTS apoderados (
+    padre_id    INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    alumno_id   INTEGER NOT NULL REFERENCES alumnos(usuario_id) ON DELETE CASCADE,
+    parentesco  TEXT NOT NULL CHECK (parentesco IN ('Padre', 'Madre', 'Apoderado')),
+    PRIMARY KEY (padre_id, alumno_id)
 );
 
 CREATE TABLE IF NOT EXISTS cursos (
@@ -124,6 +133,7 @@ CREATE TABLE IF NOT EXISTS auditoria (
 --  ÍNDICES
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_alumnos_seccion      ON alumnos(seccion_id);
+CREATE INDEX IF NOT EXISTS idx_apoderados_alumno    ON apoderados(alumno_id);
 CREATE INDEX IF NOT EXISTS idx_asistencias_fecha    ON asistencias(fecha);
 CREATE INDEX IF NOT EXISTS idx_calif_bimestre       ON calificaciones(bimestre);
 CREATE INDEX IF NOT EXISTS idx_asignaciones_docente ON asignaciones(docente_id);

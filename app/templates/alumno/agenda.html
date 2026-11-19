@@ -3,8 +3,10 @@
 {% block pagina %}
 <div class="pagina__cabecera">
     <h1>Agenda</h1>
-    <p class="suave">Tareas y avisos de tus docentes desde hoy</p>
+    <p class="suave">{% if hijo %}Tareas y avisos de la sección de {{ hijo.nombres }}{% else %}Tareas y avisos de
+        tus docentes{% endif %} desde hoy</p>
 </div>
+{% if hijos %}{% include "padre/_selector.html" %}{% endif %}
 
 <section class="tarjeta">
     <ul class="lista">
@@ -18,7 +20,7 @@
             <span class="fecha">{% if e.fecha == hoy %}Hoy{% else %}{{ e.fecha|fecha_corta }}{% endif %}</span>
         </li>
         {% else %}
-        <li class="suave">No tienes pendientes en la agenda.</li>
+        <li class="suave">No hay pendientes en la agenda.</li>
         {% endfor %}
     </ul>
 </section>

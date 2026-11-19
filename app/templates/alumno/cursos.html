@@ -3,9 +3,10 @@
 {% block titulo %}Cursos · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
-    <h1>Mis cursos</h1>
+    <h1>{% if hijo %}Horario y cursos de {{ hijo.nombres }}{% else %}Mis cursos{% endif %}</h1>
     <p class="suave">{{ perfil.grado }} "{{ perfil.seccion }}" · Año {{ perfil.anio }}</p>
 </div>
+{% if hijos %}{% include "padre/_selector.html" %}{% endif %}
 
 <section class="tarjeta">
     <h2>Horario semanal</h2>

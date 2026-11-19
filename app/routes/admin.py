@@ -11,6 +11,7 @@ from io import BytesIO, StringIO
 from flask import (Blueprint, Response, current_app, flash, redirect, render_template, request,
                    send_file, url_for)
 
+from .. import estadisticas
 from ..ajustes import ajustes, guardar
 from ..auditoria import ACCIONES, registrar
 from ..auth import login_required
@@ -48,7 +49,8 @@ def inicio():
     }
     nunca = db.execute(
         "SELECT nombres || ' ' || apellidos AS nombre, rol, correo FROM usuarios "
-        "WHERE activo = 1 AND ultimo_acceso IS NULL AND rol != 'alumno' ORDER BY rol, apellidos"
+        "WHERE activo = 1 AND ultimo_acceso IS NULL AND rol IN ('docente', 'director', 'admin') "
+        "ORDER BY rol, apellidos"
     ).fetchall()
 
     avisos = []
@@ -67,7 +69,8 @@ def inicio():
     recientes = _consulta_auditoria({}, limite=10)
     return render_template("admin/inicio.html", roles=roles, eventos=eventos, datos=datos,
                            nunca=nunca, avisos=avisos, recientes=recientes,
-                           tamano=_tamano_bd(), ultimo_respaldo=ultimo_respaldo)
+                           tamano=_tamano_bd(), ultimo_respaldo=ultimo_respaldo,
+                           graficos=estadisticas.panel())
 
 
 def _tamano_bd():

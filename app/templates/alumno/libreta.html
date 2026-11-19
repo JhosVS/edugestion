@@ -2,9 +2,10 @@
 {% block titulo %}Libreta · EduGestión{% endblock %}
 {% block pagina %}
 <div class="pagina__cabecera">
-    <h1>Mi libreta</h1>
+    <h1>{% if hijo %}Libreta de {{ hijo.nombres }}{% else %}Mi libreta{% endif %}</h1>
     <p class="suave">{{ perfil.grado }} "{{ perfil.seccion }}" · Calificativos por competencia y bimestre</p>
 </div>
+{% if hijos %}{% include "padre/_selector.html" %}{% endif %}
 
 <section class="tarjeta leyenda">
     <span><span class="chip chip--AD">AD</span> Logro destacado</span>

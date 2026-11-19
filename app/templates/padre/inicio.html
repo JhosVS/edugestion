@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% from "_graficos.html" import grafico_asistencia, barras_niveles %}
+{% block titulo %}Inicio · EduGestión{% endblock %}
+{% block pagina %}
+<div class="pagina__cabecera">
+    <h1>¡Hola, {{ g.usuario.nombres }}!</h1>
+    <p class="suave">Resumen académico de {% if resumenes|length == 1 %}tu hijo{% else %}tus hijos{% endif %}</p>
+</div>
+
+{% for r in resumenes %}
+{% set h = r.hijo %}
+<section class="tarjeta">
+    <div class="barra">
+        <h2>{{ h.nombres }} {{ h.apellidos }}</h2>
+        <span class="insignia">{{ h.grado }} "{{ h.seccion }}" · {{ h.anio }}</span>
+    </div>
+
+    <div class="grid-stats" style="margin-top: .8rem">
+        <article class="stat stat--verde">
+            <span class="stat__valor">{% if r.asistencia.pct is not none %}{{ r.asistencia.pct }}%{% else %}—{% endif
+                %}</span>
+            <span class="stat__etiqueta">Asistencia</span>
+        </article>
+        <article class="stat stat--naranja"><span class="stat__valor">{{ r.asistencia.T }}</span><span
+                class="stat__etiqueta">Tardanzas</span></article>
+        <article class="stat stat--rojo"><span class="stat__valor">{{ r.asistencia.F }}</span><span
+                class="stat__etiqueta">Faltas</span></article>
+    </div>
+
+    <div class="niveles">
+        <div><span class="chip chip--AD">AD</span> <strong>{{ r.conteo.AD }}</strong></div>
+        <div><span class="chip chip--A">A</span> <strong>{{ r.conteo.A }}</strong></div>
+        <div><span class="chip chip--B">B</span> <strong>{{ r.conteo.B }}</strong></div>
+        <div><span class="chip chip--C">C</span> <strong>{{ r.conteo.C }}</strong></div>
+        <small class="suave">competencias por nivel de logro</small>
+    </div>
+
+    <div class="graficos" style="margin-top: 1rem">
+        {{ grafico_asistencia(r.datos.meses, "Asistencia de " ~ h.nombres ~ " por mes") }}
+        {{ barras_niveles(r.datos.bimestres, "Calificativos por bimestre") }}
+    </div>
+
+    {% if r.proximas %}
+    <p><strong>Próximo en la agenda:</strong></p>
+    <ul class="lista">
+        {% for e in r.proximas %}
+        <li><span>{{ e.titulo }}</span><span class="fecha">{{ e.fecha|fecha_corta }}</span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="acciones">
+        <a class="btn btn--naranja btn--chico" href="{{ url_for('padre.libreta', hijo=h.id) }}">Libreta</a>
+        <a class="btn btn--borde btn--chico" href="{{ url_for('padre.asistencia', hijo=h.id) }}">Asistencia</a>
+        <a class="btn btn--borde btn--chico" href="{{ url_for('padre.cursos', hijo=h.id) }}">Horario</a>
+        <a class="btn btn--borde btn--chico" href="{{ url_for('padre.agenda', hijo=h.id) }}">Agenda</a>
+    </div>
+</section>
+{% else %}
+<section class="tarjeta">
+    <h2>Aún no tienes hijos vinculados</h2>
+    <p class="suave">Pide a la dirección de la institución que vincule tu cuenta con la de tu hijo o hija.</p>
+</section>
+{% endfor %}
+{% endblock %}

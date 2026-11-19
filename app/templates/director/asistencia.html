@@ -40,6 +40,7 @@
                     <th>T</th>
                     <th>F</th>
                     <th>Asistencia</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -52,6 +53,7 @@
                     <td>{{ s.f }}</td>
                     <td>{% if s.pct is not none %}<span class="chip chip--{{ s.nivel }}">{{ s.pct }}%</span>{% else
                         %}<span class="suave">—</span>{% endif %}</td>
+                    <td><a class="btn btn--borde btn--chico" href="{{ url_for('reportes.asistencia', seccion=s.id, desde=desde, hasta=hasta) }}">Ver reporte</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

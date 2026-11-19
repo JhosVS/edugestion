@@ -9,6 +9,13 @@ MENUS = {
         ("alumno.asistencia", "Asistencia", "asistencia"),
         ("alumno.agenda", "Agenda", "agenda"),
     ],
+    "padre": [
+        ("padre.inicio", "Inicio", "inicio"),
+        ("padre.libreta", "Libreta", "libreta"),
+        ("padre.asistencia", "Asistencia", "asistencia"),
+        ("padre.cursos", "Horario", "cursos"),
+        ("padre.agenda", "Agenda", "agenda"),
+    ],
     "docente": [
         ("docente.inicio", "Inicio", "inicio"),
         ("docente.asistencia", "Asistencia", "asistencia"),
@@ -25,13 +32,14 @@ MENUS = {
     "admin": [
         ("admin.inicio", "Panel", "inicio"),
         ("gestion.inicio", "Gestión", "gestion"),
+        ("reportes.asistencia", "Asistencia", "asistencia"),
         ("admin.auditoria", "Auditoría", "auditoria"),
         ("admin.configuracion", "Configuración", "configuracion"),
         ("admin.respaldo", "Respaldo", "respaldo"),
     ],
 }
 
-NOMBRE_ROL = {"alumno": "Alumno", "docente": "Docente", "director": "Director",
+NOMBRE_ROL = {"alumno": "Alumno", "padre": "Padre de familia", "docente": "Docente", "director": "Director",
               "admin": "Administrador"}
 
 # Blueprints que ocupan un solo ítem del menú: cualquiera de sus vistas lo resalta.
@@ -42,6 +50,8 @@ def menu_activo(endpoint):
     """Resalta la vista actual y sus vistas hijas (docente.asistencia -> docente.asistencia_seccion)."""
     actual = request.endpoint or ""
     blueprint = endpoint.split(".")[0]
+    if request.blueprint == "reportes":  # el reporte se resalta bajo "Asistencia" en todos los roles
+        return endpoint.endswith(".asistencia")
     return actual.startswith(endpoint) or (
         blueprint in BLUEPRINTS_DE_UN_ITEM and request.blueprint == blueprint)
 

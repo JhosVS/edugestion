@@ -13,7 +13,10 @@
         {% if s.hoy %}<span class="chip chip--P">Hoy registrada</span>{% else %}<span class="insignia">Hoy
             pendiente</span>{% endif %}
     </div>
-    <a class="btn btn--verde" href="{{ url_for('docente.asistencia_seccion', seccion_id=s.id) }}">Tomar asistencia</a>
+    <div class="barra">
+        <a class="btn btn--borde" href="{{ url_for('reportes.asistencia', seccion=s.id) }}">Ver reporte</a>
+        <a class="btn btn--verde" href="{{ url_for('docente.asistencia_seccion', seccion_id=s.id) }}">Tomar asistencia</a>
+    </div>
 </section>
 {% else %}
 <section class="tarjeta">

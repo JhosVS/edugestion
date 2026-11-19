@@ -27,26 +27,32 @@ def close_db(_error=None):
         db.close()
 
 
-def _reconstruir_usuarios(db, schema):
+def _reconstruir_usuarios(db, crear):
     """Recrea `usuarios` con el CHECK de roles y columnas actuales (SQLite no permite
     modificar un CHECK). Las claves foráneas se apagan para que DROP TABLE no borre
-    en cascada alumnos, notas y asistencias."""
-    crear = re.search(r"CREATE TABLE IF NOT EXISTS usuarios \(.*?\n\);", schema, re.S).group()
+    en cascada alumnos, notas y asistencias. Copia todas las columnas que ya existían."""
+    db.commit()
+    db.execute(crear.replace("IF NOT EXISTS usuarios", "usuarios_nueva"))
+    nuevas = [c["name"] for c in db.execute("PRAGMA table_info(usuarios_nueva)")]
+    viejas = {c["name"] for c in db.execute("PRAGMA table_info(usuarios)")}
+    columnas = ", ".join(c for c in nuevas if c in viejas)
+    db.execute("DROP TABLE usuarios_nueva")
     db.commit()
     db.executescript(
         "PRAGMA foreign_keys = OFF; BEGIN;"
         + crear.replace("IF NOT EXISTS usuarios", "usuarios_nueva")
-        + "INSERT INTO usuarios_nueva(id, nombres, apellidos, correo, clave_hash, rol, activo, creado_en) "
-          "SELECT id, nombres, apellidos, correo, clave_hash, rol, activo, creado_en FROM usuarios;"
+        + f"INSERT INTO usuarios_nueva({columnas}) SELECT {columnas} FROM usuarios;"
           "DROP TABLE usuarios; ALTER TABLE usuarios_nueva RENAME TO usuarios;"
           "COMMIT; PRAGMA foreign_keys = ON;")
 
 
 def _migrar(db, schema):
     """Cambios de esquema para bases creadas con una versión anterior."""
+    crear = re.search(r"CREATE TABLE IF NOT EXISTS usuarios \(.*?\n\);", schema, re.S).group()
+    roles = re.search(r"rol IN \([^)]*\)", crear).group()
     sql_usuarios = db.execute("SELECT sql FROM sqlite_master WHERE name = 'usuarios'").fetchone()[0]
-    if "'admin'" not in sql_usuarios:
-        _reconstruir_usuarios(db, schema)
+    if roles not in sql_usuarios:  # faltan roles nuevos en el CHECK de una base antigua
+        _reconstruir_usuarios(db, crear)
 
     columnas = {c["name"] for c in db.execute("PRAGMA table_info(alumnos)")}
     if "dni" not in columnas:

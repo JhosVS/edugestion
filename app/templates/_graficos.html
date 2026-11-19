@@ -1,0 +1,165 @@
+{# Gráficos de asistencia y notas. Uso: {% from "_graficos.html" import panel %} {{ panel(datos) }}
+   Cada gráfico trae su tabla de datos ("Ver datos") y tooltips al pasar el mouse o con el teclado. #}
+
+{% set NOMBRE_NIVEL = {"AD": "Logro destacado", "A": "Logro esperado", "B": "En proceso", "C": "En inicio"} %}
+
+{# ------------------------------------------------------------------ asistencia #}
+{% macro grafico_asistencia(meses, titulo="Asistencia por mes") -%}
+{% set g = grafico_linea(meses) %}
+<article class="tarjeta grafico">
+    <h2>{{ titulo }}</h2>
+    <p class="suave"><small>% de días asistidos (las tardanzas cuentan como asistencia)</small></p>
+    {% if g %}
+    <svg class="linea" viewBox="0 0 {{ g.ancho }} {{ g.alto }}" role="img"
+        aria-label="{{ titulo }}: de {{ meses[0].mes }} a {{ meses[-1].mes }}, último mes {{ meses[-1].pct }} %">
+        {% for t in g.ticks %}
+        <line class="grilla" x1="{{ g.izq }}" x2="{{ g.der }}" y1="{{ t.y }}" y2="{{ t.y }}" />
+        <text class="eje" x="{{ g.izq - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.valor }}%</text>
+        {% endfor %}
+        <path class="linea__area" d="{{ g.area }}" />
+        <path class="linea__trazo" d="{{ g.linea }}" />
+        {% for p in g.puntos %}
+        <text class="eje" x="{{ p.x }}" y="{{ g.alto - 8 }}" text-anchor="middle">{{ p.mes }}</text>
+        <g class="punto" tabindex="0"
+            aria-label="{{ p.mes }}: {{ p.pct }} % de asistencia, {{ p.f }} faltas y {{ p.t }} tardanzas">
+            <title>{{ p.mes }}: {{ p.pct }} % · {{ p.f }} faltas · {{ p.t }} tardanzas</title>
+            <circle class="punto__zona" cx="{{ p.x }}" cy="{{ p.y }}" r="14" />
+            <circle class="punto__marca" cx="{{ p.x }}" cy="{{ p.y }}" r="4.5" />
+        </g>
+        {% endfor %}
+        {% for p in g.etiquetados %}
+        <text class="valor" x="{{ p.x + 9 }}" y="{{ p.y + (14 if loop.index > 1 else -9) }}">{{ p.pct }}%</text>
+        {% endfor %}
+    </svg>
+    <details>
+        <summary>Ver datos</summary>
+        <div class="tabla-scroll">
+            <table class="tabla tabla--datos">
+                <thead>
+                    <tr><th>Mes</th><th>Presentes</th><th>Tardanzas</th><th>Faltas</th><th>% asistencia</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in meses %}
+                    <tr><td>{{ m.mes }}</td><td>{{ m.p }}</td><td>{{ m.t }}</td><td>{{ m.f }}</td><td>{{ m.pct }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% else %}
+    <p class="suave">Aún no hay asistencia registrada.</p>
+    {% endif %}
+</article>
+{%- endmacro %}
+
+{% macro resumen_asistencia(a) -%}
+<section class="grid-stats">
+    <article class="stat stat--verde">
+        <span class="stat__valor">{% if a.pct is not none %}{{ a.pct }}%{% else %}—{% endif %}</span>
+        <span class="stat__etiqueta">Asistencia del año</span>
+    </article>
+    <article class="stat"><span class="stat__valor">{{ "{:,}".format(a.p) }}</span><span
+            class="stat__etiqueta">Presentes</span></article>
+    <article class="stat stat--naranja"><span class="stat__valor">{{ "{:,}".format(a.t) }}</span><span
+            class="stat__etiqueta">Tardanzas</span></article>
+    <article class="stat stat--rojo"><span class="stat__valor">{{ "{:,}".format(a.f) }}</span><span
+            class="stat__etiqueta">Faltas</span></article>
+</section>
+{%- endmacro %}
+
+{# ------------------------------------------------------------------ notas #}
+{% macro leyenda_niveles() -%}
+<ul class="leyenda-niveles" aria-label="Niveles de logro">
+    {% for n, nombre in NOMBRE_NIVEL.items() %}
+    <li><span class="muestra nivel--{{ n }}"></span>{{ n }} <span class="suave">{{ nombre }}</span></li>
+    {% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro barras_niveles(filas, titulo, subtitulo="", vacio="Aún no hay calificativos registrados.") -%}
+<article class="tarjeta grafico">
+    <h2>{{ titulo }}</h2>
+    {% if subtitulo %}<p class="suave"><small>{{ subtitulo }}</small></p>{% endif %}
+    {% if filas %}
+    {{ leyenda_niveles() }}
+    <div class="niveles-filas">
+        {% for f in filas %}
+        <div class="niveles-fila">
+            <span class="niveles-fila__nombre">{{ f.nombre }}</span>
+            <div class="segmentos" role="img"
+                aria-label="{{ f.nombre }}: {% for n in ['AD', 'A', 'B', 'C'] %}{{ n }} {{ f.pct[n]|round|int }} %{{ ', ' if not loop.last }}{% endfor %}">
+                {% for n in ['AD', 'A', 'B', 'C'] if f.cuentas[n] %}
+                <span class="segmento nivel--{{ n }}" style="width: {{ f.pct[n] }}%" tabindex="0"
+                    title="{{ n }} ({{ NOMBRE_NIVEL[n] }}): {{ f.cuentas[n] }} · {{ f.pct[n]|round|int }} %">{% if
+                    f.pct[n] >= 18 %}{{ f.pct[n]|round|int }}%{% endif %}</span>
+                {% endfor %}
+            </div>
+            <span class="niveles-fila__logro" title="Logro esperado o destacado (AD + A)">{{ f.logro }}%<small>
+                    logro</small></span>
+        </div>
+        {% endfor %}
+    </div>
+    <details>
+        <summary>Ver datos</summary>
+        <div class="tabla-scroll">
+            <table class="tabla tabla--datos">
+                <thead>
+                    <tr><th></th><th>AD</th><th>A</th><th>B</th><th>C</th><th>Total</th><th>Logro (AD+A)</th></tr>
+                </thead>
+                <tbody>
+                    {% for f in filas %}
+                    <tr>
+                        <td>{{ f.nombre }}</td>
+                        {% for n in ['AD', 'A', 'B', 'C'] %}<td>{{ f.cuentas[n] }}</td>{% endfor %}
+                        <td>{{ f.total }}</td>
+                        <td>{{ f.logro }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% else %}
+    <p class="suave">{{ vacio }}</p>
+    {% endif %}
+</article>
+{%- endmacro %}
+
+{# ------------------------------------------------------------------ comparación entre secciones #}
+{% macro asistencia_secciones(secciones) -%}
+<article class="tarjeta grafico">
+    <h2>Asistencia por sección</h2>
+    <p class="suave"><small>% de días asistidos en el año</small></p>
+    <div class="medidores">
+        {% for s in secciones %}
+        <div class="medidor" tabindex="0" title="{{ s.nombre }}: {{ s.pct }} % · {{ s.f }} faltas">
+            <span class="medidor__nombre">{{ s.nombre }}</span>
+            <span class="medidor__barra"><i style="width: {{ s.pct }}%"></i></span>
+            <span class="medidor__valor">{{ s.pct }}%</span>
+        </div>
+        {% endfor %}
+    </div>
+    <details>
+        <summary>Ver datos</summary>
+        <table class="tabla tabla--datos">
+            <thead><tr><th>Sección</th><th>% asistencia</th><th>Faltas</th><th>Registros</th></tr></thead>
+            <tbody>
+                {% for s in secciones %}<tr><td>{{ s.nombre }}</td><td>{{ s.pct }}%</td><td>{{ s.f }}</td><td>{{
+                        "{:,}".format(s.total) }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </details>
+</article>
+{%- endmacro %}
+
+{# ------------------------------------------------------------------ panel completo #}
+{% macro panel(d, titulo_cursos="Logro por área", extra=none) -%}
+{{ resumen_asistencia(d.asistencia) }}
+<div class="graficos">
+    {{ grafico_asistencia(d.meses) }}
+    {{ barras_niveles(d.bimestres, "Calificativos por bimestre", "Reparto de los niveles de logro de todas las competencias") }}
+    {{ barras_niveles(d.cursos, titulo_cursos, "Bimestre " ~ d.ultimo ~ " (último con notas)" if d.ultimo else "") }}
+    {% if extra %}{{ asistencia_secciones(extra) }}{% endif %}
+</div>
+{%- endmacro %}
